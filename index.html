@@ -54,6 +54,17 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
 .panel-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 .df-panel-action{font-size:11px;padding:6px 9px;white-space:nowrap}
 .panel-status{font-size:11px;color:#83806e;min-height:14px}
+.play-controls{display:grid;gap:10px;margin-bottom:12px}
+.play-room{display:flex;flex-wrap:wrap;gap:8px}
+.play-card{width:132px;min-height:86px;text-align:left;border:1px solid #343933;background:#0d1114;border-radius:4px;padding:8px}
+.play-card-rank{display:block;font-size:15px;margin-bottom:6px}
+.play-card .meta{display:block;font-size:10px;color:#83806e;margin-top:2px}
+.play-card.monster{color:#070a0c;background:#d8d1b0;border-color:#9c9a86}
+.play-card.red-card{color:#ff6f61}
+.card-actions{display:flex;flex-wrap:nowrap;gap:5px}
+.card-actions button{font-size:10px;padding:5px 6px;min-width:0;flex:1}
+.play-card.monster .card-actions button{background:#161b1e;color:#d8d1b0}
+.play-actions{display:flex;flex-wrap:wrap;gap:8px}
 .df-log{margin:0;white-space:pre-wrap;font-size:12px;line-height:1.45;color:#d8d1b0;min-height:420px;padding-right:4px}
 .log-line{min-height:1.45em}
 .log-header{color:#f1e8b8;border-top:1px solid #2f352f;margin-top:8px;padding-top:7px}
@@ -145,10 +156,12 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
         <div class="panel-status" id="dungeonProg">No run yet.</div>
       </div>
       <div class="panel-actions">
-        <button id="playOneBtn" class="df-panel-action" onclick="runOneGame()">Enter Dungeon -&gt;</button>
-        <button id="playUntilWinBtn" class="df-panel-action" onclick="runUntilWin()">Enter Cleared Dungeon -&gt;</button>
+        <button id="playOneBtn" class="df-panel-action" onclick="startPlayableGame()">Enter Dungeon</button>
+        <button id="playUntilLossBtn" class="df-panel-action" onclick="runUntilLoss()">Enter Lost Dungeon</button>
+        <button id="playUntilWinBtn" class="df-panel-action" onclick="runUntilWin()">Enter Cleared Dungeon</button>
       </div>
     </div>
+    <div id="playControls" class="play-controls"></div>
     <div id="dungeonLog" class="df-log">Awaiting Dungeon trace.</div>
   </div>
 </div>
@@ -206,6 +219,127 @@ function createDungeon(options={}){
 
 function openingRoomHasWeapon(deck){
   return deck.slice(0, 4).some(card=>card.t === 'W');
+}
+
+function makeGameFromDeck(deck, rejectedOpenings=0){
+  return {
+    deck,
+    hp:20,
+    weapon:null,
+    skippedLast:false,
+    roomsFaced:0,
+    lastPotionValue:0,
+    lastResolvedType:null,
+    room:[],
+    carry:null,
+    isFinalRoom:false,
+    usedPotion:false,
+    resolvedThisRoom:0,
+    log: rejectedOpenings ? [`REJECTED ${rejectedOpenings.toLocaleString()} opening${rejectedOpenings === 1 ? '' : 's'} without a Weapon`] : []
+  };
+}
+
+function createGame(options={}){
+  let dungeon = createDungeon(options);
+  let rejectedOpenings = 0;
+  while(dungeon.skippedDungeons){
+    rejectedOpenings++;
+    dungeon = createDungeon(options);
+  }
+  return makeGameFromDeck(dungeon.deck, rejectedOpenings);
+}
+
+function drawRoom(game){
+  game.room = game.carry ? [game.carry] : [];
+  game.carry = null;
+  while(game.room.length < 4 && game.deck.length > 0) game.room.push(game.deck.shift());
+  if(game.room.length === 0) return false;
+  game.isFinalRoom = game.deck.length === 0 && game.room.length < 4;
+  game.usedPotion = false;
+  game.resolvedThisRoom = 0;
+  game.roomsFaced++;
+  game.log.push(roomLogLine(game));
+  return true;
+}
+
+function roomLogLine(game){
+  return `ROOM ${game.roomsFaced} ${game.room.map(shortCard).join(' ')}  HP ${game.hp}  WEAPON ${weaponStackLabel(game.weapon)}`;
+}
+
+function canAvoidRoom(game){
+  return !game.isFinalRoom && !game.skippedLast && game.resolvedThisRoom === 0 && game.room.length === 4;
+}
+
+function avoidRoom(game){
+  if(!canAvoidRoom(game)) return false;
+  game.log.push('  - avoid room; place all four cards under the Dungeon');
+  game.deck.push(...game.room);
+  game.room = [];
+  game.skippedLast = true;
+  return true;
+}
+
+function resolveGameCard(game, index, action){
+  if(index < 0 || index >= game.room.length) return false;
+  const card = game.room[index];
+  game.room.splice(index, 1);
+  game.resolvedThisRoom++;
+  game.skippedLast = false;
+
+  if(action === 'discard'){
+    game.lastResolvedType = card.t;
+    game.log.push(`  - discard ${shortCard(card)}`);
+    return true;
+  }
+
+  if(card.t === 'W'){
+    const discard = game.weapon ? `, discard ${weaponStackLabel(game.weapon)}` : '';
+    game.weapon = {val:card.v, lastKill:null, kills:[]};
+    game.lastResolvedType = 'W';
+    game.log.push(`  - equip ${shortCard(card)}${discard}`);
+    return true;
+  }
+
+  if(card.t === 'P'){
+    let heal = 0;
+    if(!game.usedPotion){
+      heal = Math.min(20, game.hp + card.v) - game.hp;
+      game.hp += heal;
+      game.lastPotionValue = card.v;
+    }
+    game.usedPotion = true;
+    game.lastResolvedType = 'P';
+    game.log.push(`  - use ${shortCard(card)} +${heal} hp${heal === 0 ? ' [discarded]' : ''}`);
+    return true;
+  }
+
+  const useWeapon = action === 'weapon' && isWeaponUsable(game.weapon, card.v);
+  const dmg = useWeapon ? monsterDamage(game.weapon, card.v) : card.v;
+  const weaponText = useWeapon ? weaponStackLabel(game.weapon) : 'fists';
+  game.hp -= dmg;
+  if(useWeapon){
+    game.weapon.lastKill = card.v;
+    game.weapon.kills.push({s:card.s, v:card.v});
+  }
+  game.lastResolvedType = 'M';
+  game.log.push(`  - fight ${shortCard(card)} with ${weaponText} -${dmg} hp`);
+  return true;
+}
+
+function shouldCarryAndDraw(game){
+  return !game.isFinalRoom && game.hp > 0 && game.room.length === 1;
+}
+
+function carryLastCard(game){
+  game.carry = game.room[0];
+  game.log.push(`  - carry ${shortCard(game.carry)}`);
+  game.room = [];
+}
+
+function playableScore(game){
+  return game.hp === 20 && game.lastResolvedType === 'P'
+    ? 20 + game.lastPotionValue
+    : game.hp;
 }
 
 function simulate(strategy, options={}){
@@ -588,6 +722,106 @@ function runStatus(result, label){
 function renderRun(result, logId, progressId, label){
   document.getElementById(progressId).textContent = runStatus(result, label);
   document.getElementById(logId).innerHTML = renderDungeonLog(result.log);
+  document.getElementById('playControls').innerHTML = '';
+}
+
+let playable = null;
+
+function startPlayableGame(){
+  const options = dungeonOptions();
+  playable = createGame(options);
+  drawPlayableRoom();
+}
+
+function drawPlayableRoom(){
+  if(!playable || playable.hp <= 0) return;
+  if(!drawRoom(playable)){
+    finishPlayableWin();
+    return;
+  }
+  renderPlayable();
+}
+
+function renderPlayable(){
+  if(!playable) return;
+  const cardsSeen = 44 - playable.deck.length;
+  document.getElementById('dungeonProg').textContent =
+    `You: hp ${playable.hp} · room ${playable.roomsFaced} · seen ${cardsSeen}/44 · weapon ${weaponStackLabel(playable.weapon)}`;
+  document.getElementById('dungeonLog').innerHTML = renderDungeonLog(playable.log);
+
+  const controls = document.getElementById('playControls');
+  if(playable.hp <= 0 || playable.room.length === 0){
+    controls.innerHTML = '';
+    return;
+  }
+
+  const buttons = [];
+  let avoidButton = '';
+  if(canAvoidRoom(playable)){
+    avoidButton = `<button onclick="avoidPlayableRoom()">Avoid room</button>`;
+  }
+
+  for(let i = 0; i < playable.room.length; i++){
+    const card = playable.room[i];
+    const cardLabel = renderLogText(shortCard(card));
+    if(card.t === 'M'){
+      const actions = [`<button onclick="resolvePlayableCard(${i}, 'fists')">fists</button>`];
+      if(isWeaponUsable(playable.weapon, card.v)){
+        actions.push(`<button onclick="resolvePlayableCard(${i}, 'weapon')">weapon</button>`);
+      }
+      buttons.push(`<div class="play-card monster"><span class="play-card-rank">${cardLabel}</span><div class="card-actions">${actions.join('')}</div></div>`);
+    } else if(card.t === 'W'){
+      buttons.push(`<div class="play-card red-card"><span class="play-card-rank">${cardLabel}</span><div class="card-actions"><button onclick="resolvePlayableCard(${i}, 'equip')">equip</button><button onclick="resolvePlayableCard(${i}, 'discard')">discard</button></div></div>`);
+    } else {
+      buttons.push(`<div class="play-card red-card"><span class="play-card-rank">${cardLabel}</span><div class="card-actions"><button onclick="resolvePlayableCard(${i}, 'potion')">${playable.usedPotion ? 'discard' : 'use'}</button>${playable.usedPotion ? '' : `<button onclick="resolvePlayableCard(${i}, 'discard')">discard</button>`}</div></div>`);
+    }
+  }
+
+  if(avoidButton) buttons.push(avoidButton);
+  controls.innerHTML = `<div class="play-room">${buttons.join('')}</div>`;
+}
+
+function avoidPlayableRoom(){
+  if(!playable || !avoidRoom(playable)) return;
+  drawPlayableRoom();
+}
+
+function resolvePlayableCard(index, action){
+  if(!playable || !resolveGameCard(playable, index, action)) return;
+
+  if(playable.hp <= 0){
+    finishPlayableLoss();
+    return;
+  }
+  if(playable.isFinalRoom && playable.room.length === 0){
+    finishPlayableWin();
+    return;
+  }
+  if(shouldCarryAndDraw(playable)){
+    carryLastCard(playable);
+    drawPlayableRoom();
+    return;
+  }
+  renderPlayable();
+}
+
+function finishPlayableLoss(){
+  if(playable.room.length) playable.log.push(`  - unresolved ${playable.room.map(shortCard).join(' ')}`);
+  playable.log.push(`  - final state: hp ${playable.hp}, weapon ${weaponStackLabel(playable.weapon)}`);
+  const score = lossScore(playable.hp, playable.deck, playable.room, playable.carry);
+  playable.log.push(`END: Dungeon lost, score ${score}`);
+  document.getElementById('dungeonProg').textContent = `You: lost · ${playable.roomsFaced} rooms · score ${score}`;
+  document.getElementById('dungeonLog').innerHTML = renderDungeonLog(playable.log);
+  document.getElementById('playControls').innerHTML = '';
+}
+
+function finishPlayableWin(){
+  const score = playableScore(playable);
+  playable.log.push(`  - final state: hp ${playable.hp}, weapon ${weaponStackLabel(playable.weapon)}`);
+  playable.log.push(`END: Dungeon cleared, score ${score}`);
+  document.getElementById('dungeonProg').textContent = `You: cleared · ${playable.roomsFaced} rooms · score ${score}`;
+  document.getElementById('dungeonLog').innerHTML = renderDungeonLog(playable.log);
+  document.getElementById('playControls').innerHTML = '';
 }
 
 function runOneGame(){
@@ -596,25 +830,45 @@ function runOneGame(){
 }
 
 async function runUntilWin(){
-  const btn = document.getElementById('playUntilWinBtn');
+  await runUntilResult({
+    buttonId: 'playUntilWinBtn',
+    targetWon: true,
+    searchingText: 'Searching for a clear',
+    notFoundText: 'No cleared Dungeon found',
+    labelSuffix: 'clear'
+  });
+}
+
+async function runUntilLoss(){
+  await runUntilResult({
+    buttonId: 'playUntilLossBtn',
+    targetWon: false,
+    searchingText: 'Searching for a loss',
+    notFoundText: 'No lost Dungeon found',
+    labelSuffix: 'loss'
+  });
+}
+
+async function runUntilResult({buttonId, targetWon, searchingText, notFoundText, labelSuffix}){
+  const btn = document.getElementById(buttonId);
   const options = dungeonOptions();
   btn.disabled = true;
-  document.getElementById('dungeonProg').textContent = 'Searching for a clear...';
+  document.getElementById('dungeonProg').textContent = `${searchingText}...`;
   let attempts = 0;
   let result = null;
   const limit = 20000;
   while(attempts < limit){
     attempts++;
     result = playSingleGame(options.strategy, options);
-    if(result.won) break;
+    if(result.won === targetWon) break;
     if(attempts % 250 === 0){
-      document.getElementById('dungeonProg').textContent = `Searching for a clear... ${attempts.toLocaleString()} attempts`;
+      document.getElementById('dungeonProg').textContent = `${searchingText}... ${attempts.toLocaleString()} attempts`;
       await new Promise(r=>setTimeout(r, 0));
     }
   }
-  if(result) renderRun(result, 'dungeonLog', 'dungeonProg', `${plannerNames[options.strategy]} clear`);
-  if(!result || !result.won){
-    document.getElementById('dungeonProg').textContent = `No cleared Dungeon found in ${limit.toLocaleString()} attempts.`;
+  if(result) renderRun(result, 'dungeonLog', 'dungeonProg', `${plannerNames[options.strategy]} ${labelSuffix}`);
+  if(!result || result.won !== targetWon){
+    document.getElementById('dungeonProg').textContent = `${notFoundText} in ${limit.toLocaleString()} attempts.`;
   } else {
     document.getElementById('dungeonProg').textContent += ` · found after ${attempts.toLocaleString()} attempts`;
   }
@@ -670,7 +924,7 @@ async function runSims(){
   const rejectedText = options.weaponStartOnly ? ` · rejected ${skipped.toLocaleString()} openings` : '';
   document.getElementById('prog').textContent = `generated ${n.toLocaleString()} runs${rejectedText}`;
   btn.disabled = false;
-  btn.textContent = 'Run Dungeon ->';
+  btn.textContent = 'Run Dungeon';
 }
 </script>
 </body>
