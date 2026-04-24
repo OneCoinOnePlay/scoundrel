@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scoundrel Dungeon Simulator</title>
+<title>Scoundrel</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
@@ -97,19 +97,19 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
 <body>
 
 <div class="sc-shell">
-<h1 class="sr-only">Scoundrel Dungeon Simulator</h1>
+<h1 class="sr-only">Scoundrel</h1>
 <section class="hero">
   <div>
     <div class="eyebrow">Scoundrel</div>
-    <h2 class="title">Dungeon run simulator</h2>
-    <p class="lede">The delver reads the room, health, weapon state, potion rule, and carry-card risk, but never looks ahead into the hidden Dungeon.</p>
+    <h2 class="title">Play the Dungeon or Run the Dungeon</h2>
+    <p class="lede">A single player rogue-like card game. Scoundrel is played with a standard deck of playing cards: fight monsters, equip weapons, drink potions, and try to clear the Dungeon with your 20 health intact. Jump in and Play the Dungeon yourself or run the simulation to explore the odds.</p>
   </div>
-  <div class="badge">44-card dungeon · 20 HP</div>
+  <div class="badge">One Coin One Play</div>
 </section>
 
 <div class="controls">
   <div class="control-group">
-    <label class="control-label" for="simCount">Simulations</label>
+    <label class="control-label" for="simCount">Planner odds</label>
     <select id="simCount">
       <option value="2000">2,000</option>
       <option value="10000" selected>10,000</option>
@@ -118,24 +118,24 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
   </div>
   <label class="check-control" for="weaponStartOnly">
     <input id="weaponStartOnly" type="checkbox">
-    Require opening Weapon
+    Opening room must contain a Weapon
   </label>
   <div class="planner-options" aria-label="Planner">
     <label class="planner-option">
       <input type="radio" name="planner" value="delver" checked>
-      <span><strong>Scoundrel Delver</strong>Baseline visible-state planner. Avoids a carried monster when the next room could be dangerous.</span>
+      <span><strong>Scoundrel Delver</strong>Careful play. Avoids risky carried monsters and protects health.</span>
     </label>
     <label class="planner-option">
       <input type="radio" name="planner" value="bolder">
-      <span><strong>Bolder Delver</strong>Accepts more carry-card risk. Higher observed clear rate in normal and opening-Weapon runs.</span>
+      <span><strong>Bolder Delver</strong>Braver play. Carries more danger to preserve better rooms and weapons.</span>
     </label>
   </div>
-  <button id="runBtn" onclick="runSims()">Run Dungeon -&gt;</button>
+  <button id="runBtn" onclick="runSims()">Estimate odds</button>
 </div>
 
 <div class="metric-grid" id="metrics">
-  <div class="metric"><div class="metric-label">Clear %</div><div class="metric-value" id="m-wr">-</div><div class="metric-sub">Dungeon runs</div></div>
-  <div class="metric"><div class="metric-label">Clear HP</div><div class="metric-value" id="m-ws">-</div><div class="metric-sub">avg remaining</div></div>
+  <div class="metric"><div class="metric-label">Clear %</div><div class="metric-value" id="m-wr">-</div><div class="metric-sub">planner runs</div></div>
+  <div class="metric"><div class="metric-label">Clear HP</div><div class="metric-value" id="m-ws">-</div><div class="metric-sub">avg on clear</div></div>
   <div class="metric"><div class="metric-label">Loss score</div><div class="metric-value" id="m-ls">-</div><div class="metric-sub">avg failed run</div></div>
   <div class="metric"><div class="metric-label">Rooms</div><div class="metric-value" id="m-rooms">-</div><div class="metric-sub">median faced</div></div>
 </div>
@@ -152,24 +152,23 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
   <div class="df-panel">
     <div class="df-panel-head">
       <div class="df-panel-title">
-        <h3>Dungeon</h3>
-        <div class="panel-status" id="dungeonProg">No run yet.</div>
+        <h3>Play and Traces</h3>
+        <div class="panel-status" id="dungeonProg">Start a playable Dungeon or load a generated trace.</div>
       </div>
       <div class="panel-actions">
-        <button id="playOneBtn" class="df-panel-action" onclick="startPlayableGame()">Enter Dungeon</button>
-        <button id="playUntilLossBtn" class="df-panel-action" onclick="runUntilLoss()">Enter Lost Dungeon</button>
-        <button id="playUntilWinBtn" class="df-panel-action" onclick="runUntilWin()">Enter Cleared Dungeon</button>
+        <button id="playOneBtn" class="df-panel-action" onclick="startPlayableGame()">Play Dungeon</button>
+        <button id="playUntilLossBtn" class="df-panel-action" onclick="runUntilLoss()">Run Lost Trace</button>
+        <button id="playUntilWinBtn" class="df-panel-action" onclick="runUntilWin()">Run Cleared Trace</button>
       </div>
     </div>
     <div id="playControls" class="play-controls"></div>
-    <div id="dungeonLog" class="df-log">Awaiting Dungeon trace.</div>
+    <div id="dungeonLog" class="df-log">No Dungeon loaded.</div>
   </div>
 </div>
 
 <details class="rules">
   <summary>Rule</summary>
   <div class="rules-body">
-    <p><strong>Attribution.</strong> Based on <a href="http://stfj.net/art/2011/Scoundrel.pdf" target="_blank" rel="noopener">Scoundrel - version 1.0, August 15th, 2011</a>, a single player rogue-like card game by Zach Gage and Kurt Bieg.</p>
     <p><strong>Setup.</strong> Use a standard deck. Remove all Jokers, red face cards, and red aces. Shuffle the remaining 44 cards into the Dungeon. Start at 20 health.</p>
     <p><strong>Card types.</strong> Clubs and spades are Monsters worth 2-14 damage. Diamonds 2-10 are Weapons. Hearts 2-10 are Health Potions.</p>
     <p><strong>Weapons.</strong> Weapons are binding: if you pick one up, you must equip it and discard your previous weapon and any monsters on it. When used against a monster, damage taken is max(0, monster value - weapon value). After a weapon kills a monster, it may only be used on monsters of equal or lower value than the last monster it killed.</p>
@@ -177,11 +176,13 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
     <p><strong>Room flow.</strong> Flip cards one by one until four cards are face up in the Room. You may avoid the Room by placing all four cards at the bottom of the Dungeon, but you may not avoid two Rooms in a row. If you do not avoid the Room, you must face exactly three of the four cards, one at a time, in any order. The fourth card remains face up as part of the next Room.</p>
     <p><strong>Combat.</strong> Barehanded combat deals the monster's full value to your health. Weapon combat keeps the weapon equipped; the slain monster is placed on the weapon to mark the new limit.</p>
     <p><strong>Game end and scoring.</strong> The game ends when your health reaches 0 or the Dungeon is cleared. On a loss, your score is your life minus the values of all remaining monsters, which is negative. On a win, your score is your positive life, except that if you finish on 20 health and the last card resolved was a health potion, your score is 20 plus that potion's value.</p>
+    <p><strong>Attribution.</strong> Based on <a href="http://stfj.net/art/2011/Scoundrel.pdf" target="_blank" rel="noopener">Scoundrel - version 1.0, August 15th, 2011</a>, a single player rogue-like card game by Zach Gage and Kurt Bieg.</p>
   </div>
 </details>
 </div>
 
 <script>
+// Author: One Coin One Play — https://github.com/OneCoinOnePlay
 const plannerNames = {
   delver: 'Scoundrel Delver',
   bolder: 'Bolder Delver'
@@ -833,9 +834,9 @@ async function runUntilWin(){
   await runUntilResult({
     buttonId: 'playUntilWinBtn',
     targetWon: true,
-    searchingText: 'Searching for a clear',
-    notFoundText: 'No cleared Dungeon found',
-    labelSuffix: 'clear'
+    searchingText: 'Searching generated traces for a clear',
+    notFoundText: 'No cleared trace found',
+    labelSuffix: 'cleared trace'
   });
 }
 
@@ -843,9 +844,9 @@ async function runUntilLoss(){
   await runUntilResult({
     buttonId: 'playUntilLossBtn',
     targetWon: false,
-    searchingText: 'Searching for a loss',
-    notFoundText: 'No lost Dungeon found',
-    labelSuffix: 'loss'
+    searchingText: 'Searching generated traces for a loss',
+    notFoundText: 'No lost trace found',
+    labelSuffix: 'lost trace'
   });
 }
 
@@ -880,8 +881,8 @@ async function runSims(){
   const options = dungeonOptions();
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
-  btn.textContent = 'Running...';
-  document.getElementById('prog').textContent = 'Generating runs...';
+  btn.textContent = 'Estimating...';
+  document.getElementById('prog').textContent = 'Estimating planner odds...';
   await new Promise(r=>setTimeout(r, 20));
 
   const results = [];
@@ -889,7 +890,7 @@ async function runSims(){
   for(let i = 0; i < n; i += batch){
     const end = Math.min(i + batch, n);
     for(let j = i; j < end; j++) results.push(simulate(options.strategy, options));
-    document.getElementById('prog').textContent = `${end.toLocaleString()} / ${n.toLocaleString()} runs`;
+    document.getElementById('prog').textContent = `${end.toLocaleString()} / ${n.toLocaleString()} planner runs`;
     await new Promise(r=>setTimeout(r, 0));
   }
 
@@ -913,7 +914,7 @@ async function runSims(){
   const counts = buckets.map(b=>results.filter(b.fn).length);
   const maxC = Math.max(...counts, 1);
   const barsEl = document.getElementById('bars');
-  barsEl.innerHTML = '<div class="section-title">Score distribution</div>';
+  barsEl.innerHTML = '<div class="section-title">Planner score distribution</div>';
   buckets.forEach((b, i)=>{
     const pct = (counts[i] / n * 100).toFixed(1);
     const w = Math.round(counts[i] / maxC * 100);
@@ -922,9 +923,9 @@ async function runSims(){
 
   const skipped = results.reduce((sum, r)=>sum + (r.skippedDungeons || 0), 0);
   const rejectedText = options.weaponStartOnly ? ` · rejected ${skipped.toLocaleString()} openings` : '';
-  document.getElementById('prog').textContent = `generated ${n.toLocaleString()} runs${rejectedText}`;
+  document.getElementById('prog').textContent = `estimated ${n.toLocaleString()} planner runs${rejectedText}`;
   btn.disabled = false;
-  btn.textContent = 'Run Dungeon';
+  btn.textContent = 'Estimate odds';
 }
 </script>
 </body>

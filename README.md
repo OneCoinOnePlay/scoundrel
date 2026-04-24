@@ -1,33 +1,40 @@
-# Scoundrel Dungeon Simulator
+# Scoundrel
 
-This simulator models the 2011 `Scoundrel` ruleset and focuses on a single strict Dungeon-running planner: `Scoundrel Delver`.
+Play the Dungeon or run the Dungeon.
 
-Open `index.html` in a browser and press `Run Dungeon ->` to estimate its clear rate. The filename is ready for GitHub Pages or any static host.
+Scoundrel is a single player rogue-like card game played with a standard deck of playing cards. Fight monsters, equip weapons, drink potions, and try to clear the Dungeon with your 20 health intact.
 
-## Current Baseline
+This browser app gives you three ways into the game:
 
-The current `Scoundrel Delver` planner uses only the current room, current health, equipped weapon, weapon ceiling, potion-use state, and carry-card risk. It does not inspect the hidden Dungeon order.
+- **Play Dungeon**: play Scoundrel manually, card by card.
+- **Run Lost Trace / Run Cleared Trace**: generate example Dungeon runs to inspect how a planner falls or clears.
+- **Estimate odds**: run planner simulations and compare clear rate, average clear health, loss score, and rooms faced.
 
-Local command-line probes after the planner revision produced about a `5.4%` clear rate over `10,000` Dungeon runs. This is a material improvement over the previous roughly `0.4-1.0%` behavior, but it is still below the cited `20%` human-player expectation. Treat the remaining gap as planner quality work, not a rules-engine validation.
+Open `index.html` in a browser, or publish this folder with GitHub Pages.
 
-The UI includes an optional filter to skip Dungeons whose opening room contains no Weapon before starting the run.
+## Planners
 
-## Strategy Fixes
+The planners are not hidden-deck solvers. They use visible game state only: the current room, health, weapon stack, potion rule, and carry-card risk.
 
-- Room skipping is now reserved for concrete danger: a losing visible plan, a carried monster that is likely to kill on the next room, or a very low-health room without potion support.
-- Hidden-deck lookahead was removed. The planner no longer reads the next three cards from the dungeon to choose a carry card.
-- Heuristics were normalized around health, weapon value, weapon ceiling, expected monster damage, usable potion healing, and carry-card risk instead of mixing unrelated ad hoc score scales.
+### Scoundrel Delver
 
-## Removed Strategies
+Careful play. Avoids risky carried monsters and protects health.
 
-- removed Greedy weapon
-- removed Conservative
-- removed Potion priority
-- removed Random
-- removed Lookahead
+### Bolder Delver
 
-These strategies were removed from both the UI and the code because they were either weaker heuristic baselines or relied on hidden-deck lookahead that is not fair human-equivalent play.
+Braver play. Carries more danger to preserve better rooms and weapons.
 
-## Remaining Strategy
+## Planner Results
 
-`Scoundrel Delver` is the only supported planner. It plays using visible room state, current health, current weapon state, potion constraints, and carry risk, without cheating by consulting hidden future cards.
+Estimated over 10,000 planner runs.
+
+| Planner | Setup | Clear % | Clear HP | Loss score | Rooms |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Scoundrel Delver | Standard opening | 5.2% | 6.1 | -56.5 | 17 |
+| Scoundrel Delver | Opening room must contain a Weapon | 6.5% | 6.4 | -52.1 | 17 |
+| Bolder Delver | Standard opening | 5.8% | 6.8 | -54.2 | 16 |
+| Bolder Delver | Opening room must contain a Weapon | 6.6% | 6.9 | -50.0 | 16 |
+
+## Rules
+
+Based on [Scoundrel - version 1.0, August 15th, 2011](http://stfj.net/art/2011/Scoundrel.pdf), a single player rogue-like card game by Zach Gage and Kurt Bieg.
