@@ -2,7 +2,7 @@
 
 This simulator models the 2011 `Scoundrel` ruleset and focuses on a single fair visible-state strategy: `Survivalist`.
 
-Open `scoundrel_sim_v2.html` in a browser and press `Run simulation ->` to estimate the strategy's win rate.
+Open `index.html` in a browser and press `Run simulation ->` to estimate the strategy's win rate. The filename is ready for GitHub Pages or any static host.
 
 ## Current Baseline
 
