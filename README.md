@@ -1,14 +1,16 @@
-# Scoundrel Simulator
+# Scoundrel Dungeon Simulator
 
-This simulator models the 2011 `Scoundrel` ruleset and focuses on a single fair visible-state strategy: `Survivalist`.
+This simulator models the 2011 `Scoundrel` ruleset and focuses on a single strict Dungeon-running planner: `Scoundrel Delver`.
 
-Open `index.html` in a browser and press `Run simulation ->` to estimate the strategy's win rate. The filename is ready for GitHub Pages or any static host.
+Open `index.html` in a browser and press `Run Dungeon ->` to estimate its clear rate. The filename is ready for GitHub Pages or any static host.
 
 ## Current Baseline
 
-The current `Survivalist` strategy is intentionally visible-state only. It uses the current room, current health, equipped weapon, weapon ceiling, potion-use state, and carry-card risk. It does not inspect the hidden dungeon order.
+The current `Scoundrel Delver` planner uses only the current room, current health, equipped weapon, weapon ceiling, potion-use state, and carry-card risk. It does not inspect the hidden Dungeon order.
 
-Local command-line probes after the strategy revision produced about a `5.4%` win rate over `10,000` simulated games. This is a material improvement over the previous roughly `0.4-1.0%` behavior, but it is still below the cited `20%` human-player expectation. Treat the remaining gap as strategy quality work, not a rules-engine validation.
+Local command-line probes after the planner revision produced about a `5.4%` clear rate over `10,000` Dungeon runs. This is a material improvement over the previous roughly `0.4-1.0%` behavior, but it is still below the cited `20%` human-player expectation. Treat the remaining gap as planner quality work, not a rules-engine validation.
+
+The UI includes an optional filter to skip Dungeons whose opening room contains no Weapon before starting the run.
 
 ## Strategy Fixes
 
@@ -28,4 +30,4 @@ These strategies were removed from both the UI and the code because they were ei
 
 ## Remaining Strategy
 
-`Survivalist` is the only supported strategy. It plays using visible room state, current health, current weapon state, potion constraints, and carry risk, without cheating by consulting hidden future cards.
+`Scoundrel Delver` is the only supported planner. It plays using visible room state, current health, current weapon state, potion constraints, and carry risk, without cheating by consulting hidden future cards.

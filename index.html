@@ -3,16 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scoundrel Survivalist Simulator</title>
+<title>Scoundrel Dungeon Simulator</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:
-  radial-gradient(circle at 18% 10%,rgba(230,215,143,.13),transparent 28rem),
-  radial-gradient(circle at 82% 0%,rgba(125,200,255,.08),transparent 24rem),
-  linear-gradient(135deg,#070a0c,#111713 58%,#090c0f);
-  color:#c6c0a5;padding:24px}
+body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-.sc-shell{max-width:1120px;margin:0 auto;background:rgba(11,15,18,.94);color:#c6c0a5;border:1px solid #4b4f45;border-radius:14px;padding:22px;font-family:Menlo,Consolas,Monaco,"Courier New",monospace;box-shadow:0 24px 80px rgba(0,0,0,.35)}
+.sc-shell{max-width:1120px;margin:0 auto;background:#0d1114;color:#c6c0a5;border:1px solid #4b4f45;border-radius:8px;padding:20px;font-family:Menlo,Consolas,Monaco,"Courier New",monospace;box-shadow:0 16px 42px rgba(0,0,0,.32)}
 .sc-shell button,.sc-shell select{font-family:inherit;background:#161b1e;color:#d8d1b0;border:1px solid #6a715f;border-radius:6px;padding:8px 11px}
 .sc-shell button{cursor:pointer}
 .sc-shell button:disabled{cursor:wait;opacity:.62}
@@ -24,37 +20,53 @@ body{margin:0;min-height:100vh;background:
 .title{font-size:clamp(24px,4vw,42px);line-height:1.05;color:#f1e8b8;margin:0 0 10px}
 .lede{max-width:780px;margin:0;color:#9c9a86;font-size:14px;line-height:1.6}
 .badge{border:1px solid #5e654f;border-radius:999px;padding:7px 10px;color:#d8d1b0;background:#111619;font-size:12px;white-space:nowrap}
-.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.5rem}
-.metric{background:#121619;border:1px solid #343933;border-radius:4px;padding:1rem}
-.metric-label{font-size:13px;color:#9c9a86;margin-bottom:4px}
-.metric-value{font-size:22px;font-weight:500;color:#f1e8b8}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:1rem}
+.metric{background:#121619;border:1px solid #343933;border-radius:4px;padding:.75rem}
+.metric-label{font-size:12px;color:#9c9a86;margin-bottom:3px}
+.metric-value{font-size:20px;font-weight:500;color:#f1e8b8}
 .metric-sub{font-size:11px;color:#83806e;margin-top:2px}
-.strat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem}
-.sc{background:#121619;border:1px solid #343933;border-radius:4px;padding:.85rem 1rem;cursor:pointer}
-.sc:hover{border-color:#b7aa6a}
-.sc.active{border:1px solid #e6d78f;box-shadow:inset 0 0 0 1px #736b48}
-.sc h3{font-size:13px;font-weight:500;margin:0 0 3px;color:#f1e8b8}
-.sc p{font-size:11px;color:#9c9a86;margin:0;line-height:1.5}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px}
 .bar-label{width:130px;flex-shrink:0;color:#9c9a86;text-align:right}
 .bar-track{flex:1;background:#121619;border-radius:4px;height:16px;overflow:hidden;border:1px solid #343933}
 .bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
 .bar-pct{width:42px;flex-shrink:0;font-weight:500;color:#f1e8b8}
 .progress{font-size:12px;color:#83806e;margin-top:.5rem;min-height:18px}
-.single-progress{margin:0;min-height:auto}
-.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:1rem}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:1rem;background:#111619;border:1px solid #343933;border-radius:4px;padding:10px}
 .control-group{display:flex;align-items:center;gap:8px}
-.control-label{font-size:14px;color:#9c9a86}
-.single-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:1rem 0}
-.df-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:1rem}
+.control-label,.planner{font-size:12px;color:#9c9a86}
+.check-control{display:flex;align-items:center;gap:8px;font-size:12px;color:#9c9a86}
+.check-control input{accent-color:#e6d78f}
+.planner-options{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:8px;flex:1 1 380px}
+.planner-option{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;border:1px solid #343933;background:#121619;border-radius:4px;padding:8px;color:#9c9a86;font-size:11px;line-height:1.35}
+.planner-option input{margin-top:2px;accent-color:#e6d78f}
+.planner-option strong{display:block;color:#f1e8b8;font-size:12px;margin-bottom:2px}
+.planner-option:has(input:checked){border-color:#e6d78f;box-shadow:inset 0 0 0 1px #736b48}
+.df-legend{display:flex;flex-wrap:wrap;gap:10px;margin:.85rem 0 .65rem;font-size:11px;color:#83806e}
+.legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend-red{background:#ff6f61}
+.legend-black{background:#d8d1b0;border:1px solid #9c9a86}
+.legend-gold{background:#e6d78f}
+.df-grid{display:grid;gap:12px;margin-top:.75rem}
 .df-panel{background:#121619;border:1px solid #343933;border-radius:4px;padding:12px}
-.df-panel h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#e6d78f}
-.df-pre{margin:0;white-space:pre-wrap;font-size:12px;line-height:1.45;color:#d8d1b0}
-.df-card-row{display:flex;gap:8px;flex-wrap:wrap}
-.df-card{white-space:pre;font-size:12px;line-height:1.05;color:#d8d1b0;background:#0d1114;border:1px solid #2f352f;padding:4px}
-.df-card.monster{color:#ff8080}
-.df-card.weapon{color:#7dc8ff}
-.df-card.potion{color:#7ee787}
+.df-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.df-panel-title{display:grid;gap:4px}
+.df-panel h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#e6d78f}
+.panel-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.df-panel-action{font-size:11px;padding:6px 9px;white-space:nowrap}
+.panel-status{font-size:11px;color:#83806e;min-height:14px}
+.df-log{margin:0;white-space:pre-wrap;font-size:12px;line-height:1.45;color:#d8d1b0;min-height:420px;padding-right:4px}
+.log-line{min-height:1.45em}
+.log-header{color:#f1e8b8;border-top:1px solid #2f352f;margin-top:8px;padding-top:7px}
+.log-line:first-child{border-top:0;margin-top:0;padding-top:0}
+.log-equip{color:#ff6f61}
+.log-fight{color:#d8d1b0}
+.log-potion{color:#7ee787}
+.log-carry{color:#e6d78f}
+.log-end{color:#f1e8b8}
+.log-muted{color:#83806e}
+.card-red{color:#ff6f61}
+.card-black{color:#070a0c;background:#d8d1b0;padding:0 2px;border-radius:2px}
+.log-equip .card-red,.log-equip .card-black{color:inherit;background:transparent;padding:0}
 .rules{margin-top:1rem;background:#121619;border-radius:6px;padding:1rem}
 .rules-body{margin-top:.75rem;font-size:12px;line-height:1.55;color:#9c9a86}
 .section-title{font-size:13px;font-weight:500;color:#f1e8b8;margin-bottom:10px}
@@ -65,18 +77,21 @@ body{margin:0;min-height:100vh;background:
   .badge{display:inline-block;margin-top:12px}
   .bar-row{display:grid;grid-template-columns:1fr 42px;gap:5px 8px}
   .bar-label{width:auto;text-align:left;grid-column:1 / -1}
+  .planner-options{grid-template-columns:1fr}
+  .df-panel-head{display:grid}
+  .df-panel-action{width:100%}
 }
 </style>
 </head>
 <body>
 
 <div class="sc-shell">
-<h1 class="sr-only">Scoundrel Survivalist Simulator</h1>
+<h1 class="sr-only">Scoundrel Dungeon Simulator</h1>
 <section class="hero">
   <div>
-    <div class="eyebrow">Scoundrel Monte Carlo</div>
-    <h2 class="title">Survivalist odds terminal</h2>
-    <p class="lede">Estimate win rate for a visible-state Scoundrel strategy. The planner sees only the room, health, weapon state, potion rule, and carry-card risk; it does not peek into the hidden dungeon.</p>
+    <div class="eyebrow">Scoundrel</div>
+    <h2 class="title">Dungeon run simulator</h2>
+    <p class="lede">The delver reads the room, health, weapon state, potion rule, and carry-card risk, but never looks ahead into the hidden Dungeon.</p>
   </div>
   <div class="badge">44-card dungeon · 20 HP</div>
 </section>
@@ -90,46 +105,58 @@ body{margin:0;min-height:100vh;background:
       <option value="50000">50,000</option>
     </select>
   </div>
-  <button id="runBtn" onclick="runSims()">Run simulation -&gt;</button>
-</div>
-
-<div class="strat-grid" id="stratGrid">
-  <div class="sc active" data-s="survival" onclick="sel(this)">
-    <h3>Survivalist</h3>
-    <p>Visible-state play that balances carry safety, potion timing, weapon ceilings, and selective room avoidance.</p>
+  <label class="check-control" for="weaponStartOnly">
+    <input id="weaponStartOnly" type="checkbox">
+    Require opening Weapon
+  </label>
+  <div class="planner-options" aria-label="Planner">
+    <label class="planner-option">
+      <input type="radio" name="planner" value="delver" checked>
+      <span><strong>Scoundrel Delver</strong>Baseline visible-state planner. Avoids a carried monster when the next room could be dangerous.</span>
+    </label>
+    <label class="planner-option">
+      <input type="radio" name="planner" value="bolder">
+      <span><strong>Bolder Delver</strong>Accepts more carry-card risk. Higher observed clear rate in normal and opening-Weapon runs.</span>
+    </label>
   </div>
+  <button id="runBtn" onclick="runSims()">Run Dungeon -&gt;</button>
 </div>
 
 <div class="metric-grid" id="metrics">
-  <div class="metric"><div class="metric-label">Win rate</div><div class="metric-value" id="m-wr">-</div><div class="metric-sub">of games</div></div>
-  <div class="metric"><div class="metric-label">Avg hp on win</div><div class="metric-value" id="m-ws">-</div><div class="metric-sub">health remaining</div></div>
-  <div class="metric"><div class="metric-label">Avg loss score</div><div class="metric-value" id="m-ls">-</div><div class="metric-sub">monsters remaining</div></div>
-  <div class="metric"><div class="metric-label">Median rooms</div><div class="metric-value" id="m-rooms">-</div><div class="metric-sub">rooms faced</div></div>
+  <div class="metric"><div class="metric-label">Clear %</div><div class="metric-value" id="m-wr">-</div><div class="metric-sub">Dungeon runs</div></div>
+  <div class="metric"><div class="metric-label">Clear HP</div><div class="metric-value" id="m-ws">-</div><div class="metric-sub">avg remaining</div></div>
+  <div class="metric"><div class="metric-label">Loss score</div><div class="metric-value" id="m-ls">-</div><div class="metric-sub">avg failed run</div></div>
+  <div class="metric"><div class="metric-label">Rooms</div><div class="metric-value" id="m-rooms">-</div><div class="metric-sub">median faced</div></div>
 </div>
 
 <div id="bars"></div>
 <div class="progress" id="prog"></div>
-<div class="single-controls">
-  <button id="playOneBtn" onclick="runOneGame()">Play one game -&gt;</button>
-  <button id="playUntilWinBtn" onclick="runUntilWin()">Seek a winning game -&gt;</button>
-  <div class="progress single-progress" id="singleProg">No single game played yet.</div>
+<div class="df-legend">
+  <span><span class="legend-swatch legend-red"></span>red = Weapon/Potion</span>
+  <span><span class="legend-swatch legend-black"></span>black = Monster</span>
+  <span><span class="legend-swatch legend-gold"></span>gold = carry</span>
 </div>
 
 <div class="df-grid">
   <div class="df-panel">
-    <h3>Current Snapshot</h3>
-    <div id="singleCards" class="df-card-row"></div>
-    <pre id="singleSummary" class="df-pre">Press "Play one game" to inspect a full run.</pre>
-  </div>
-  <div class="df-panel">
-    <h3>Game Log</h3>
-    <pre id="singleLog" class="df-pre">Awaiting simulation trace.</pre>
+    <div class="df-panel-head">
+      <div class="df-panel-title">
+        <h3>Dungeon</h3>
+        <div class="panel-status" id="dungeonProg">No run yet.</div>
+      </div>
+      <div class="panel-actions">
+        <button id="playOneBtn" class="df-panel-action" onclick="runOneGame()">Enter Dungeon -&gt;</button>
+        <button id="playUntilWinBtn" class="df-panel-action" onclick="runUntilWin()">Enter Cleared Dungeon -&gt;</button>
+      </div>
+    </div>
+    <div id="dungeonLog" class="df-log">Awaiting Dungeon trace.</div>
   </div>
 </div>
 
 <details class="rules">
-  <summary>Authoritative rules (Scoundrel v1.0, August 15, 2011)</summary>
+  <summary>Rule</summary>
   <div class="rules-body">
+    <p><strong>Attribution.</strong> Based on <a href="http://stfj.net/art/2011/Scoundrel.pdf" target="_blank" rel="noopener">Scoundrel - version 1.0, August 15th, 2011</a>, a single player rogue-like card game by Zach Gage and Kurt Bieg.</p>
     <p><strong>Setup.</strong> Use a standard deck. Remove all Jokers, red face cards, and red aces. Shuffle the remaining 44 cards into the Dungeon. Start at 20 health.</p>
     <p><strong>Card types.</strong> Clubs and spades are Monsters worth 2-14 damage. Diamonds 2-10 are Weapons. Hearts 2-10 are Health Potions.</p>
     <p><strong>Weapons.</strong> Weapons are binding: if you pick one up, you must equip it and discard your previous weapon and any monsters on it. When used against a monster, damage taken is max(0, monster value - weapon value). After a weapon kills a monster, it may only be used on monsters of equal or lower value than the last monster it killed.</p>
@@ -142,8 +169,10 @@ body{margin:0;min-height:100vh;background:
 </div>
 
 <script>
-let strat = 'survival';
-function sel(el){ document.querySelectorAll('.sc').forEach(c=>c.classList.remove('active')); el.classList.add('active'); strat=el.dataset.s; }
+const plannerNames = {
+  delver: 'Scoundrel Delver',
+  bolder: 'Bolder Delver'
+};
 
 function makeDeck(){
   const d = [];
@@ -162,8 +191,31 @@ function shuffle(a){
   return b;
 }
 
-function simulate(strategy){
+function dungeonOptions(){
+  return {
+    weaponStartOnly: document.getElementById('weaponStartOnly').checked,
+    strategy: document.querySelector('input[name="planner"]:checked').value
+  };
+}
+
+function createDungeon(options={}){
   const deck = shuffle(makeDeck());
+  const skippedDungeons = options.weaponStartOnly && !openingRoomHasWeapon(deck) ? 1 : 0;
+  return {deck, skippedDungeons};
+}
+
+function openingRoomHasWeapon(deck){
+  return deck.slice(0, 4).some(card=>card.t === 'W');
+}
+
+function simulate(strategy, options={}){
+  let dungeon = createDungeon(options);
+  let skippedDungeons = 0;
+  while(dungeon.skippedDungeons){
+    skippedDungeons++;
+    dungeon = createDungeon(options);
+  }
+  const deck = dungeon.deck;
   const state = {hp:20, weapon:null, skippedLast:false, roomsFaced:0, lastPotionValue:0, lastResolvedType:null};
   let carry = null;
 
@@ -199,18 +251,27 @@ function simulate(strategy){
     state.lastPotionValue = plan.outcome.state.lastPotionValue || 0;
     state.lastResolvedType = plan.outcome.state.lastResolvedType || null;
     if(state.hp <= 0){
-      return {won:false, score:lossScore(state.hp, deck, plan.outcome.unresolved, carry), roomsFaced:state.roomsFaced};
+      return {won:false, score:lossScore(state.hp, deck, plan.outcome.unresolved, carry), roomsFaced:state.roomsFaced, skippedDungeons};
     }
   }
 
   const winScore = state.hp === 20 && state.lastResolvedType === 'P' ? 20 + state.lastPotionValue : state.hp;
-  return {won:state.hp > 0, score:winScore, roomsFaced:state.roomsFaced};
+  return {won:state.hp > 0, score:winScore, roomsFaced:state.roomsFaced, skippedDungeons};
 }
 
-function playSingleGame(strategy){
-  const deck = shuffle(makeDeck());
+function playSingleGame(strategy, options={}){
+  let dungeon = createDungeon(options);
+  let skippedDungeons = 0;
+  while(dungeon.skippedDungeons){
+    skippedDungeons++;
+    dungeon = createDungeon(options);
+  }
+  const deck = dungeon.deck;
   const state = {hp:20, weapon:null, skippedLast:false, roomsFaced:0, lastPotionValue:0, lastResolvedType:null};
   const log = [];
+  if(skippedDungeons){
+    log.push(`REJECTED ${skippedDungeons.toLocaleString()} opening${skippedDungeons === 1 ? '' : 's'} without a Weapon`);
+  }
   let carry = null;
 
   while(state.hp > 0 && (carry !== null || deck.length > 0)){
@@ -220,11 +281,11 @@ function playSingleGame(strategy){
 
     const isFinalRoom = deck.length === 0 && room.length < 4;
     const plan = evaluateRoomPlan(room, state, isFinalRoom);
-    const roomHeader = `ROOM ${state.roomsFaced + 1}  HP ${state.hp}  WEAPON ${weaponLabel(state.weapon)}  DECK ${deck.length}  ROOM ${room.map(shortCard).join(' ')}`;
+    const roomHeader = `ROOM ${state.roomsFaced + 1} ${room.map(shortCard).join(' ')}  HP ${state.hp}  WEAPON ${weaponStackLabel(state.weapon)}`;
 
     if(!isFinalRoom && shouldSkipRoom(room, state, strategy, plan)){
       log.push(roomHeader);
-      log.push('  - avoid room, move all four cards to bottom of dungeon');
+      log.push('  - avoid room; place all four cards under the Dungeon');
       state.roomsFaced++;
       deck.push(...room);
       carry = null;
@@ -242,38 +303,44 @@ function playSingleGame(strategy){
       carryLine = `  - carry ${shortCard(carry)}`;
     } else {
       carry = null;
-      carryLine = '  - carry none (final room)';
+      carryLine = null;
     }
 
     log.push(...plan.outcome.steps.map(line=>`  - ${line}`));
-    log.push(carryLine);
+    if(carryLine) log.push(carryLine);
     state.hp = plan.outcome.state.hp;
     state.weapon = cloneWeapon(plan.outcome.state.weapon);
     state.lastPotionValue = plan.outcome.state.lastPotionValue || 0;
     state.lastResolvedType = plan.outcome.state.lastResolvedType || null;
-    log.push(`  - end with hp ${state.hp}, weapon ${weaponLabel(state.weapon)}`);
+    if(state.hp <= 0 && plan.outcome.unresolved.length){
+      log.push(`  - unresolved ${plan.outcome.unresolved.map(shortCard).join(' ')}`);
+    }
+    if(isFinalRoom || state.hp <= 0){
+      log.push(`  - final state: hp ${state.hp}, weapon ${weaponStackLabel(state.weapon)}`);
+    }
 
     if(state.hp <= 0){
       const score = lossScore(state.hp, deck, plan.outcome.unresolved, carry);
-      log.push(`END: loss, score ${score}`);
-      return {won:false, score, roomsFaced:state.roomsFaced, carry, state:cloneState(state), deck:deck.slice(), log};
+      log.push(`END: Dungeon lost, score ${score}`);
+      return {won:false, score, roomsFaced:state.roomsFaced, skippedDungeons, carry, state:cloneState(state), deck:deck.slice(), log};
     }
   }
 
   const score = state.hp === 20 && state.lastResolvedType === 'P' ? 20 + state.lastPotionValue : state.hp;
-  log.push(`END: win, score ${score}`);
-  return {won:true, score, roomsFaced:state.roomsFaced, carry, state:cloneState(state), deck:deck.slice(), log};
+  log.push(`END: Dungeon cleared, score ${score}`);
+  return {won:true, score, roomsFaced:state.roomsFaced, skippedDungeons, carry, state:cloneState(state), deck:deck.slice(), log};
 }
 
 function shouldSkipRoom(room, state, strategy, plan){
   if(state.skippedLast) return false;
   if(plan && plan.outcome && plan.outcome.state.hp <= 0) return true;
+  const carryDangerBuffer = strategy === 'bolder' ? 1 : 3;
 
   if(plan && plan.carryCard && plan.carryCard.t === 'M'){
     const nextHp = plan.outcome.state.hp;
     const nextWeapon = plan.outcome.state.weapon;
     const nextDamage = monsterDamage(nextWeapon, plan.carryCard.v);
-    if(nextHp <= nextDamage + 3) return true;
+    if(nextHp <= nextDamage + carryDangerBuffer) return true;
   }
 
   const hasPotion = room.some(card=>card.t === 'P');
@@ -317,19 +384,21 @@ function searchRoomOutcome(cards, state, usedPotion){
     const nextCards = cards.slice(0, i).concat(cards.slice(i + 1));
 
     if(card.t === 'W'){
-      const nextState = {...cloneState(state), weapon:{val:card.v, lastKill:null}, lastResolvedType:'W'};
+      const previousWeapon = cloneWeapon(state.weapon);
+      const nextState = {...cloneState(state), weapon:{val:card.v, lastKill:null, kills:[]}, lastResolvedType:'W'};
       const outcome = searchRoomOutcome(nextCards, nextState, usedPotion);
-      if(state.weapon){
+      if(previousWeapon){
         let replacementPenalty = 0;
         for(const nextCard of nextCards){
           if(nextCard.t !== 'M') continue;
-          const oldDamage = monsterDamage(state.weapon, nextCard.v);
+          const oldDamage = monsterDamage(previousWeapon, nextCard.v);
           const newDamage = monsterDamage(nextState.weapon, nextCard.v);
           replacementPenalty = Math.max(replacementPenalty, newDamage - oldDamage);
         }
         outcome.score -= replacementPenalty * 72;
       }
-      outcome.steps = [`equip ${shortCard(card)} -> weapon ${weaponLabel(nextState.weapon)}`, ...outcome.steps];
+      const discard = previousWeapon ? `, discard ${weaponStackLabel(previousWeapon)}` : '';
+      outcome.steps = [`equip ${shortCard(card)}${discard}`, ...outcome.steps];
       best = betterOutcome(best, outcome);
       continue;
     }
@@ -348,7 +417,7 @@ function searchRoomOutcome(cards, state, usedPotion){
       const outcome = searchRoomOutcome(nextCards, nextState, true);
       const heal = usedPotion ? 0 : Math.min(20, state.hp + card.v) - state.hp;
       outcome.score += branchBias;
-      outcome.steps = [`use ${shortCard(card)} -> +${heal} hp (${nextState.hp})${usedPotion ? ' [discarded second potion]' : ''}`, ...outcome.steps];
+      outcome.steps = [`use ${shortCard(card)} +${heal} hp${usedPotion ? ' [discarded second potion]' : ''}`, ...outcome.steps];
       best = betterOutcome(best, outcome);
       continue;
     }
@@ -364,6 +433,7 @@ function searchRoomOutcome(cards, state, usedPotion){
       if(branch.useWeapon){
         nextState.hp -= monsterDamage(nextState.weapon, card.v);
         nextState.weapon.lastKill = card.v;
+        nextState.weapon.kills.push({s:card.s, v:card.v});
         branchBias -= Math.max(0, 6 - card.v) * 10;
       } else {
         nextState.hp -= card.v;
@@ -376,7 +446,7 @@ function searchRoomOutcome(cards, state, usedPotion){
       const outcome = searchRoomOutcome(nextCards, nextState, usedPotion);
       const dmg = branch.useWeapon ? monsterDamage(state.weapon, card.v) : card.v;
       outcome.score += branchBias;
-      outcome.steps = [`fight ${shortCard(card)} with ${branch.useWeapon ? weaponLabel(state.weapon) : 'fists'} -> -${dmg} hp (${nextState.hp})`, ...outcome.steps];
+      outcome.steps = [`fight ${shortCard(card)} with ${branch.useWeapon ? weaponStackLabel(state.weapon) : 'fists'} -${dmg} hp`, ...outcome.steps];
       best = betterOutcome(best, outcome);
     }
   }
@@ -422,7 +492,11 @@ function scoreCarryover(card, state){
 }
 
 function cloneWeapon(weapon){
-  return weapon ? {val:weapon.val, lastKill:weapon.lastKill} : null;
+  return weapon ? {
+    val: weapon.val,
+    lastKill: weapon.lastKill,
+    kills: (weapon.kills || []).map(card=>({s:card.s, v:card.v}))
+  } : null;
 }
 
 function cloneState(state){
@@ -461,21 +535,11 @@ function rankLabel(v){
   return String(v);
 }
 
-function weaponLabel(weapon){
+function weaponStackLabel(weapon){
   if(!weapon) return 'none';
-  const cap = weapon.lastKill === null ? '*' : rankLabel(weapon.lastKill);
-  return `${rankLabel(weapon.val)}<=${cap}`;
-}
-
-function renderAsciiCard(card, note=''){
-  const kind = card.t === 'M' ? 'MONSTER' : (card.t === 'W' ? 'WEAPON' : 'POTION');
-  return [
-    '+---------+',
-    `|${centerText(shortCard(card), 9)}|`,
-    `|${centerText(kind, 9)}|`,
-    `|${centerText(note, 9)}|`,
-    '+---------+'
-  ].join('\n');
+  const stack = [`♦${rankLabel(weapon.val)}`];
+  for(const kill of weapon.kills || []) stack.push(shortCard(kill));
+  return stack.join(' ');
 }
 
 function suitGlyph(s){
@@ -486,90 +550,92 @@ function suitGlyph(s){
   return '?';
 }
 
-function centerText(text, width){
-  const s = String(text);
-  const left = Math.max(0, Math.floor((width - s.length) / 2));
-  const right = Math.max(0, width - s.length - left);
-  return `${' '.repeat(left)}${s}${' '.repeat(right)}`;
+function logClass(line){
+  if(line.startsWith('ROOM')) return 'log-header';
+  if(line.includes('- equip ')) return 'log-equip';
+  if(line.includes('- fight ')) return 'log-fight';
+  if(line.includes('- use ')) return 'log-potion';
+  if(line.includes('- carry ')) return 'log-carry';
+  if(line.startsWith('END:') || line.includes('- final state:')) return 'log-end';
+  return 'log-muted';
 }
 
-function renderSingleGame(result){
-  document.getElementById('singleProg').textContent = `Single game: ${result.won ? 'win' : 'loss'} in ${result.roomsFaced} rooms, score ${result.score}.`;
-  document.getElementById('singleSummary').textContent =
-    `RESULT : ${result.won ? 'WIN' : 'LOSS'}\n` +
-    `SCORE  : ${result.score}\n` +
-    `HP     : ${result.state.hp}\n` +
-    `ROOMS  : ${result.roomsFaced}\n` +
-    `WEAPON : ${weaponLabel(result.state.weapon)}\n` +
-    `CARRY  : ${result.carry ? shortCard(result.carry) : 'none'}\n` +
-    `DECK   : ${result.deck.length} cards remain`;
-  document.getElementById('singleLog').textContent = result.log.join('\n');
-  const cardsEl = document.getElementById('singleCards');
-  cardsEl.innerHTML = '';
-  if(result.carry){
-    const div = document.createElement('div');
-    div.className = `df-card ${cardClass(result.carry)}`;
-    div.textContent = renderAsciiCard(result.carry, 'next');
-    cardsEl.appendChild(div);
-  }
-  if(result.state.weapon){
-    const div = document.createElement('div');
-    div.className = 'df-card weapon';
-    div.textContent = renderAsciiCard({t:'W', s:'D', v:result.state.weapon.val}, `<=${result.state.weapon.lastKill === null ? '*' : rankLabel(result.state.weapon.lastKill)}`);
-    cardsEl.appendChild(div);
-  }
-  if(!result.carry && !result.state.weapon){
-    cardsEl.textContent = 'No carry card or equipped weapon.';
-  }
+function escapeHtml(text){
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-function cardClass(card){
-  return card.t === 'M' ? 'monster' : (card.t === 'W' ? 'weapon' : 'potion');
+function renderLogText(line){
+  return escapeHtml(line).replace(/([♣♠♦♥](?:10|[2-9JQKA]))/g, token=>{
+    const cls = token.startsWith('♦') || token.startsWith('♥') ? 'card-red' : 'card-black';
+    return `<span class="${cls}">${token}</span>`;
+  });
+}
+
+function renderDungeonLog(lines){
+  return lines.map(line=>`<div class="log-line ${logClass(line)}">${renderLogText(line)}</div>`).join('');
+}
+
+function runStatus(result, label){
+  const skipped = result.skippedDungeons ? ` · ${result.skippedDungeons.toLocaleString()} rejected` : '';
+  return `${label}: ${result.won ? 'cleared' : 'lost'} · ${result.roomsFaced} rooms · score ${result.score}${skipped}`;
+}
+
+function renderRun(result, logId, progressId, label){
+  document.getElementById(progressId).textContent = runStatus(result, label);
+  document.getElementById(logId).innerHTML = renderDungeonLog(result.log);
 }
 
 function runOneGame(){
-  renderSingleGame(playSingleGame(strat));
+  const options = dungeonOptions();
+  renderRun(playSingleGame(options.strategy, options), 'dungeonLog', 'dungeonProg', plannerNames[options.strategy]);
 }
 
 async function runUntilWin(){
   const btn = document.getElementById('playUntilWinBtn');
+  const options = dungeonOptions();
   btn.disabled = true;
-  document.getElementById('singleProg').textContent = 'Searching for a winning trace...';
+  document.getElementById('dungeonProg').textContent = 'Searching for a clear...';
   let attempts = 0;
   let result = null;
   const limit = 20000;
   while(attempts < limit){
     attempts++;
-    result = playSingleGame(strat);
+    result = playSingleGame(options.strategy, options);
     if(result.won) break;
     if(attempts % 250 === 0){
-      document.getElementById('singleProg').textContent = `Searching for a winning trace... ${attempts} attempts`;
+      document.getElementById('dungeonProg').textContent = `Searching for a clear... ${attempts.toLocaleString()} attempts`;
       await new Promise(r=>setTimeout(r, 0));
     }
   }
-  if(result) renderSingleGame(result);
+  if(result) renderRun(result, 'dungeonLog', 'dungeonProg', `${plannerNames[options.strategy]} clear`);
   if(!result || !result.won){
-    document.getElementById('singleProg').textContent = `No win found in ${limit.toLocaleString()} attempts for "${strat}".`;
+    document.getElementById('dungeonProg').textContent = `No cleared Dungeon found in ${limit.toLocaleString()} attempts.`;
   } else {
-    document.getElementById('singleProg').textContent += ` Found after ${attempts.toLocaleString()} attempts.`;
+    document.getElementById('dungeonProg').textContent += ` · found after ${attempts.toLocaleString()} attempts`;
   }
   btn.disabled = false;
 }
 
 async function runSims(){
   const n = +document.getElementById('simCount').value;
+  const options = dungeonOptions();
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
   btn.textContent = 'Running...';
-  document.getElementById('prog').textContent = 'Starting...';
+  document.getElementById('prog').textContent = 'Generating runs...';
   await new Promise(r=>setTimeout(r, 20));
 
   const results = [];
   const batch = 1000;
   for(let i = 0; i < n; i += batch){
     const end = Math.min(i + batch, n);
-    for(let j = i; j < end; j++) results.push(simulate(strat));
-    document.getElementById('prog').textContent = `${Math.round(end / n * 100)}%...`;
+    for(let j = i; j < end; j++) results.push(simulate(options.strategy, options));
+    document.getElementById('prog').textContent = `${end.toLocaleString()} / ${n.toLocaleString()} runs`;
     await new Promise(r=>setTimeout(r, 0));
   }
 
@@ -582,12 +648,12 @@ async function runSims(){
   document.getElementById('m-rooms').textContent = rms[0 | n / 2];
 
   const buckets = [
-    {label:'Won - score 15+', fn:r=>r.won && r.score >= 15, color:'#1D9E75'},
-    {label:'Won - hp 8-14', fn:r=>r.won && r.score >= 8 && r.score < 15, color:'#5DCAA5'},
-    {label:'Won - hp 1-7', fn:r=>r.won && r.score < 8, color:'#9FE1CB'},
-    {label:'Lost - 0 to -30', fn:r=>!r.won && r.score >= -30, color:'#FAC775'},
-    {label:'Lost - 31 to -70', fn:r=>!r.won && r.score >= -70 && r.score < -30, color:'#E24B4A'},
-    {label:'Lost - 71+', fn:r=>!r.won && r.score < -70, color:'#A32D2D'},
+    {label:'Cleared - score 15+', fn:r=>r.won && r.score >= 15, color:'#1D9E75'},
+    {label:'Cleared - hp 8-14', fn:r=>r.won && r.score >= 8 && r.score < 15, color:'#5DCAA5'},
+    {label:'Cleared - hp 1-7', fn:r=>r.won && r.score < 8, color:'#9FE1CB'},
+    {label:'Fell - 0 to -30', fn:r=>!r.won && r.score >= -30, color:'#FAC775'},
+    {label:'Fell - 31 to -70', fn:r=>!r.won && r.score >= -70 && r.score < -30, color:'#E24B4A'},
+    {label:'Fell - 71+', fn:r=>!r.won && r.score < -70, color:'#A32D2D'},
   ];
 
   const counts = buckets.map(b=>results.filter(b.fn).length);
@@ -600,9 +666,11 @@ async function runSims(){
     barsEl.innerHTML += `<div class="bar-row"><span class="bar-label">${b.label}</span><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${b.color}"></div></div><span class="bar-pct">${pct}%</span></div>`;
   });
 
-  document.getElementById('prog').textContent = `Done - ${n.toLocaleString()} games simulated with "${strat}" strategy.`;
+  const skipped = results.reduce((sum, r)=>sum + (r.skippedDungeons || 0), 0);
+  const rejectedText = options.weaponStartOnly ? ` · rejected ${skipped.toLocaleString()} openings` : '';
+  document.getElementById('prog').textContent = `generated ${n.toLocaleString()} runs${rejectedText}`;
   btn.disabled = false;
-  btn.textContent = 'Run simulation ->';
+  btn.textContent = 'Run Dungeon ->';
 }
 </script>
 </body>
