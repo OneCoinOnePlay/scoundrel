@@ -1,0 +1,566 @@
+
+<h2 class="sr-only">Scoundrel win-odds simulator v2 - Monte Carlo estimate of win rate across four strategies</h2>
+<style>
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.sc-shell{background:#0b0f12;color:#c6c0a5;border:1px solid #4b4f45;border-radius:8px;padding:16px;font-family:Menlo,Consolas,Monaco,"Courier New",monospace}
+.sc-shell button,.sc-shell select{font-family:inherit;background:#161b1e;color:#d8d1b0;border:1px solid #6a715f;border-radius:4px;padding:6px 10px}
+.sc-shell button:hover,.sc-shell select:hover{border-color:#b7aa6a}
+.sc-shell details{border:1px solid #3f453d}
+.sc-shell summary{color:#e6d78f}
+.df-title{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#e6d78f;margin-bottom:10px}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.5rem}
+.metric{background:#121619;border:1px solid #343933;border-radius:4px;padding:1rem}
+.metric-label{font-size:13px;color:#9c9a86;margin-bottom:4px}
+.metric-value{font-size:22px;font-weight:500;color:#f1e8b8}
+.metric-sub{font-size:11px;color:#83806e;margin-top:2px}
+.strat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem}
+.sc{background:#121619;border:1px solid #343933;border-radius:4px;padding:.85rem 1rem;cursor:pointer}
+.sc:hover{border-color:#b7aa6a}
+.sc.active{border:1px solid #e6d78f;box-shadow:inset 0 0 0 1px #736b48}
+.sc h3{font-size:13px;font-weight:500;margin:0 0 3px;color:#f1e8b8}
+.sc p{font-size:11px;color:#9c9a86;margin:0;line-height:1.5}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px}
+.bar-label{width:130px;flex-shrink:0;color:#9c9a86;text-align:right}
+.bar-track{flex:1;background:#121619;border-radius:4px;height:16px;overflow:hidden;border:1px solid #343933}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.bar-pct{width:42px;flex-shrink:0;font-weight:500;color:#f1e8b8}
+.progress{font-size:12px;color:#83806e;margin-top:.5rem;min-height:18px}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:1rem}
+.single-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:1rem 0}
+.df-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:1rem}
+.df-panel{background:#121619;border:1px solid #343933;border-radius:4px;padding:12px}
+.df-panel h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#e6d78f}
+.df-pre{margin:0;white-space:pre-wrap;font-size:12px;line-height:1.45;color:#d8d1b0}
+.df-card-row{display:flex;gap:8px;flex-wrap:wrap}
+.df-card{white-space:pre;font-size:12px;line-height:1.05;color:#d8d1b0;background:#0d1114;border:1px solid #2f352f;padding:4px}
+.df-card.monster{color:#ff8080}
+.df-card.weapon{color:#7dc8ff}
+.df-card.potion{color:#7ee787}
+</style>
+
+<div class="sc-shell">
+<div class="df-title">Scoundrel Monte Carlo Terminal</div>
+<div class="controls">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <label style="font-size:14px;color:#9c9a86;">Simulations</label>
+    <select id="simCount">
+      <option value="2000">2,000</option>
+      <option value="10000" selected>10,000</option>
+      <option value="50000">50,000</option>
+    </select>
+  </div>
+  <button id="runBtn" onclick="runSims()">Run simulation -&gt;</button>
+</div>
+
+<div class="strat-grid" id="stratGrid">
+  <div class="sc active" data-s="survival" onclick="sel(this)">
+    <h3>Survivalist</h3>
+    <p>Fair visible-state play: prioritises carry safety, weapon ceilings, and aggressive room skipping.</p>
+  </div>
+</div>
+
+<div class="metric-grid" id="metrics">
+  <div class="metric"><div class="metric-label">Win rate</div><div class="metric-value" id="m-wr">-</div><div class="metric-sub">of games</div></div>
+  <div class="metric"><div class="metric-label">Avg hp on win</div><div class="metric-value" id="m-ws">-</div><div class="metric-sub">health remaining</div></div>
+  <div class="metric"><div class="metric-label">Avg loss score</div><div class="metric-value" id="m-ls">-</div><div class="metric-sub">monsters remaining</div></div>
+  <div class="metric"><div class="metric-label">Median rooms</div><div class="metric-value" id="m-rooms">-</div><div class="metric-sub">rooms faced</div></div>
+</div>
+
+<div id="bars"></div>
+<div class="progress" id="prog"></div>
+<div class="single-controls">
+  <button id="playOneBtn" onclick="runOneGame()">Play one game -&gt;</button>
+  <button id="playUntilWinBtn" onclick="runUntilWin()">Seek a winning game -&gt;</button>
+  <div class="progress" id="singleProg" style="margin:0;min-height:auto;">No single game played yet.</div>
+</div>
+
+<div class="df-grid">
+  <div class="df-panel">
+    <h3>Current Snapshot</h3>
+    <div id="singleCards" class="df-card-row"></div>
+    <pre id="singleSummary" class="df-pre">Press "Play one game" to inspect a full run.</pre>
+  </div>
+  <div class="df-panel">
+    <h3>Game Log</h3>
+    <pre id="singleLog" class="df-pre">Awaiting simulation trace.</pre>
+  </div>
+</div>
+
+<details style="margin-top:1rem;background:#121619;border-radius:4px;padding:1rem;">
+  <summary style="cursor:pointer;font-size:14px;font-weight:500;color:#f1e8b8;">Authoritative rules (Scoundrel v1.0, August 15, 2011)</summary>
+  <div style="margin-top:.75rem;font-size:12px;line-height:1.55;color:#9c9a86;">
+    <p><strong>Setup.</strong> Use a standard deck. Remove all Jokers, red face cards, and red aces. Shuffle the remaining 44 cards into the Dungeon. Start at 20 health.</p>
+    <p><strong>Card types.</strong> Clubs and spades are Monsters worth 2-14 damage. Diamonds 2-10 are Weapons. Hearts 2-10 are Health Potions.</p>
+    <p><strong>Weapons.</strong> Weapons are binding: if you pick one up, you must equip it and discard your previous weapon and any monsters on it. When used against a monster, damage taken is max(0, monster value - weapon value). After a weapon kills a monster, it may only be used on monsters of equal or lower value than the last monster it killed.</p>
+    <p><strong>Potions.</strong> You may only use one health potion per turn. A second potion taken in the same turn is discarded with no healing. Health cannot exceed 20.</p>
+    <p><strong>Room flow.</strong> Flip cards one by one until four cards are face up in the Room. You may avoid the Room by placing all four cards at the bottom of the Dungeon, but you may not avoid two Rooms in a row. If you do not avoid the Room, you must face exactly three of the four cards, one at a time, in any order. The fourth card remains face up as part of the next Room.</p>
+    <p><strong>Combat.</strong> Barehanded combat deals the monster's full value to your health. Weapon combat keeps the weapon equipped; the slain monster is placed on the weapon to mark the new limit.</p>
+    <p><strong>Game end and scoring.</strong> The game ends when your health reaches 0 or the Dungeon is cleared. On a loss, your score is your life minus the values of all remaining monsters, which is negative. On a win, your score is your positive life, except that if you finish on 20 health and the last card resolved was a health potion, your score is 20 plus that potion's value.</p>
+  </div>
+</details>
+</div>
+
+<script>
+let strat = 'survival';
+function sel(el){ document.querySelectorAll('.sc').forEach(c=>c.classList.remove('active')); el.classList.add('active'); strat=el.dataset.s; }
+
+function makeDeck(){
+  const d = [];
+  for(const s of ['C', 'S']) for(let v = 2; v <= 14; v++) d.push({t:'M', v, s});
+  for(let v = 2; v <= 10; v++) d.push({t:'W', v, s:'D'});
+  for(let v = 2; v <= 10; v++) d.push({t:'P', v, s:'H'});
+  return d;
+}
+
+function shuffle(a){
+  const b = a.slice();
+  for(let i = b.length - 1; i > 0; i--){
+    const j = 0 | (Math.random() * (i + 1));
+    [b[i], b[j]] = [b[j], b[i]];
+  }
+  return b;
+}
+
+function simulate(strategy){
+  const deck = shuffle(makeDeck());
+  const state = {hp:20, weapon:null, skippedLast:false, roomsFaced:0, lastPotionValue:0, lastResolvedType:null};
+  let carry = null;
+
+  while(state.hp > 0 && (carry !== null || deck.length > 0)){
+    const room = carry ? [carry] : [];
+    while(room.length < 4 && deck.length > 0){
+      room.push(deck.shift());
+    }
+    if(room.length === 0) break;
+
+    const isFinalRoom = deck.length === 0 && room.length < 4;
+    const plan = evaluateRoomPlan(room, state, isFinalRoom);
+
+    if(!isFinalRoom && shouldSkipRoom(room, state, strategy, plan)){
+      state.roomsFaced++;
+      deck.push(...room);
+      carry = null;
+      state.skippedLast = true;
+      continue;
+    }
+
+    state.skippedLast = false;
+    state.roomsFaced++;
+
+    if(!isFinalRoom){
+      carry = room[plan.carryIndex];
+    } else {
+      carry = null;
+    }
+
+    state.hp = plan.outcome.state.hp;
+    state.weapon = cloneWeapon(plan.outcome.state.weapon);
+    state.lastPotionValue = plan.outcome.state.lastPotionValue || 0;
+    state.lastResolvedType = plan.outcome.state.lastResolvedType || null;
+    if(state.hp <= 0){
+      return {won:false, score:lossScore(state.hp, deck, plan.outcome.unresolved, carry), roomsFaced:state.roomsFaced};
+    }
+  }
+
+  const winScore = state.hp === 20 && state.lastResolvedType === 'P' ? 20 + state.lastPotionValue : state.hp;
+  return {won:state.hp > 0, score:winScore, roomsFaced:state.roomsFaced};
+}
+
+function playSingleGame(strategy){
+  const deck = shuffle(makeDeck());
+  const state = {hp:20, weapon:null, skippedLast:false, roomsFaced:0, lastPotionValue:0, lastResolvedType:null};
+  const log = [];
+  let carry = null;
+
+  while(state.hp > 0 && (carry !== null || deck.length > 0)){
+    const room = carry ? [carry] : [];
+    while(room.length < 4 && deck.length > 0) room.push(deck.shift());
+    if(room.length === 0) break;
+
+    const isFinalRoom = deck.length === 0 && room.length < 4;
+    const plan = evaluateRoomPlan(room, state, isFinalRoom);
+    const roomHeader = `ROOM ${state.roomsFaced + 1}  HP ${state.hp}  WEAPON ${weaponLabel(state.weapon)}  DECK ${deck.length}  ROOM ${room.map(shortCard).join(' ')}`;
+
+    if(!isFinalRoom && shouldSkipRoom(room, state, strategy, plan)){
+      log.push(roomHeader);
+      log.push('  - avoid room, move all four cards to bottom of dungeon');
+      state.roomsFaced++;
+      deck.push(...room);
+      carry = null;
+      state.skippedLast = true;
+      continue;
+    }
+
+    state.skippedLast = false;
+    state.roomsFaced++;
+    log.push(roomHeader);
+
+    let carryLine = null;
+    if(!isFinalRoom){
+      carry = room[plan.carryIndex];
+      carryLine = `  - carry ${shortCard(carry)}`;
+    } else {
+      carry = null;
+      carryLine = '  - carry none (final room)';
+    }
+
+    log.push(...plan.outcome.steps.map(line=>`  - ${line}`));
+    log.push(carryLine);
+    state.hp = plan.outcome.state.hp;
+    state.weapon = cloneWeapon(plan.outcome.state.weapon);
+    state.lastPotionValue = plan.outcome.state.lastPotionValue || 0;
+    state.lastResolvedType = plan.outcome.state.lastResolvedType || null;
+    log.push(`  - end with hp ${state.hp}, weapon ${weaponLabel(state.weapon)}`);
+
+    if(state.hp <= 0){
+      const score = lossScore(state.hp, deck, plan.outcome.unresolved, carry);
+      log.push(`END: loss, score ${score}`);
+      return {won:false, score, roomsFaced:state.roomsFaced, carry, state:cloneState(state), deck:deck.slice(), log};
+    }
+  }
+
+  const score = state.hp === 20 && state.lastResolvedType === 'P' ? 20 + state.lastPotionValue : state.hp;
+  log.push(`END: win, score ${score}`);
+  return {won:true, score, roomsFaced:state.roomsFaced, carry, state:cloneState(state), deck:deck.slice(), log};
+}
+
+function shouldSkipRoom(room, state, strategy, plan){
+  if(state.skippedLast) return false;
+  if(plan && plan.outcome && plan.outcome.state.hp <= 0) return true;
+
+  if(plan && plan.carryCard && plan.carryCard.t === 'M'){
+    const nextHp = plan.outcome.state.hp;
+    const nextWeapon = plan.outcome.state.weapon;
+    const nextDamage = monsterDamage(nextWeapon, plan.carryCard.v);
+    if(nextHp <= nextDamage + 3) return true;
+  }
+
+  const hasPotion = room.some(card=>card.t === 'P');
+  const planHp = plan ? plan.outcome.state.hp : state.hp;
+
+  return !hasPotion && state.hp <= 10 && planHp <= 6;
+}
+
+function evaluateRoomPlan(room, state, isFinalRoom){
+  if(isFinalRoom){
+    const outcome = searchRoomOutcome(room, cloneState(state), false);
+    return {carryIndex:-1, carryCard:null, outcome, totalScore:outcome.score};
+  }
+
+  let best = null;
+  for(let i = 0; i < room.length; i++){
+    const carry = room[i];
+    const cards = room.filter((_, idx)=>idx !== i);
+    const outcome = searchRoomOutcome(cards, cloneState(state), false);
+    const totalScore = outcome.state.hp <= 0
+      ? doomedPlanScore(outcome.state.hp, carry, outcome.unresolved)
+      : outcome.score + scoreCarryover(carry, outcome.state);
+    if(best === null || totalScore > best.totalScore){
+      best = {carryIndex:i, carryCard:carry, outcome, totalScore};
+    }
+  }
+  return best;
+}
+
+function searchRoomOutcome(cards, state, usedPotion){
+  if(state.hp <= 0){
+    return {state, unresolved:cards.slice(), score:-1000000 + state.hp * 100, steps:[]};
+  }
+  if(cards.length === 0){
+    return {state, unresolved:[], score:scoreState(state), steps:[]};
+  }
+
+  let best = null;
+  for(let i = 0; i < cards.length; i++){
+    const card = cards[i];
+    const nextCards = cards.slice(0, i).concat(cards.slice(i + 1));
+
+    if(card.t === 'W'){
+      const nextState = {...cloneState(state), weapon:{val:card.v, lastKill:null}, lastResolvedType:'W'};
+      const outcome = searchRoomOutcome(nextCards, nextState, usedPotion);
+      if(state.weapon){
+        let replacementPenalty = 0;
+        for(const nextCard of nextCards){
+          if(nextCard.t !== 'M') continue;
+          const oldDamage = monsterDamage(state.weapon, nextCard.v);
+          const newDamage = monsterDamage(nextState.weapon, nextCard.v);
+          replacementPenalty = Math.max(replacementPenalty, newDamage - oldDamage);
+        }
+        outcome.score -= replacementPenalty * 72;
+      }
+      outcome.steps = [`equip ${shortCard(card)} -> weapon ${weaponLabel(nextState.weapon)}`, ...outcome.steps];
+      best = betterOutcome(best, outcome);
+      continue;
+    }
+
+    if(card.t === 'P'){
+      const nextState = cloneState(state);
+      let branchBias = 0;
+      if(!usedPotion){
+        const heal = Math.min(20, nextState.hp + card.v) - nextState.hp;
+        const waste = card.v - heal;
+        nextState.hp = Math.min(20, nextState.hp + card.v);
+        nextState.lastPotionValue = card.v;
+        branchBias -= waste * 79;
+      }
+      nextState.lastResolvedType = 'P';
+      const outcome = searchRoomOutcome(nextCards, nextState, true);
+      const heal = usedPotion ? 0 : Math.min(20, state.hp + card.v) - state.hp;
+      outcome.score += branchBias;
+      outcome.steps = [`use ${shortCard(card)} -> +${heal} hp (${nextState.hp})${usedPotion ? ' [discarded second potion]' : ''}`, ...outcome.steps];
+      best = betterOutcome(best, outcome);
+      continue;
+    }
+
+    const fightBranches = [{useWeapon:false}];
+    if(isWeaponUsable(state.weapon, card.v)){
+      fightBranches.push({useWeapon:true});
+    }
+
+    for(const branch of fightBranches){
+      const nextState = cloneState(state);
+      let branchBias = 0;
+      if(branch.useWeapon){
+        nextState.hp -= monsterDamage(nextState.weapon, card.v);
+        nextState.weapon.lastKill = card.v;
+        branchBias -= Math.max(0, 6 - card.v) * 10;
+      } else {
+        nextState.hp -= card.v;
+        if(isWeaponUsable(state.weapon, card.v)){
+          const avoidableDamage = card.v - monsterDamage(state.weapon, card.v);
+          branchBias -= avoidableDamage * 8;
+        }
+      }
+      nextState.lastResolvedType = 'M';
+      const outcome = searchRoomOutcome(nextCards, nextState, usedPotion);
+      const dmg = branch.useWeapon ? monsterDamage(state.weapon, card.v) : card.v;
+      outcome.score += branchBias;
+      outcome.steps = [`fight ${shortCard(card)} with ${branch.useWeapon ? weaponLabel(state.weapon) : 'fists'} -> -${dmg} hp (${nextState.hp})`, ...outcome.steps];
+      best = betterOutcome(best, outcome);
+    }
+  }
+
+  return best || {state:{hp:0, weapon:cloneWeapon(state.weapon)}, unresolved:cards.slice(), score:-1000000, steps:[]};
+}
+
+function betterOutcome(a, b){
+  if(a === null) return b;
+  return b.score > a.score ? b : a;
+}
+
+function isWeaponUsable(weapon, monsterValue){
+  return weapon !== null && (weapon.lastKill === null || monsterValue <= weapon.lastKill);
+}
+
+function monsterDamage(weapon, monsterValue){
+  return isWeaponUsable(weapon, monsterValue) ? Math.max(0, monsterValue - weapon.val) : monsterValue;
+}
+
+function scoreState(state){
+  if(state.hp <= 0) return -1000000 + state.hp * 100;
+  const weaponValue = state.weapon ? state.weapon.val : 0;
+  const chainCeiling = state.weapon && state.weapon.lastKill !== null ? state.weapon.lastKill : 14;
+  return state.hp * 132 + weaponValue * 23 + chainCeiling * 14;
+}
+
+function scoreCarryover(card, state){
+  if(card.t === 'P'){
+    const usableHeal = Math.min(card.v, 20 - state.hp);
+    const reserveValue = state.hp <= 12 ? card.v * 20 : card.v * 7;
+    return usableHeal * 89 + reserveValue;
+  }
+
+  if(card.t === 'W'){
+    if(!state.weapon) return card.v * 34;
+    const resetValue = state.weapon.lastKill === null ? 0 : (14 - state.weapon.lastKill) * 16;
+    return (card.v - state.weapon.val) * 19 + resetValue;
+  }
+
+  const expectedDamage = monsterDamage(state.weapon, card.v);
+  return -expectedDamage * 60 - card.v * 15;
+}
+
+function cloneWeapon(weapon){
+  return weapon ? {val:weapon.val, lastKill:weapon.lastKill} : null;
+}
+
+function cloneState(state){
+  return {
+    hp: state.hp,
+    weapon: cloneWeapon(state.weapon),
+    skippedLast: state.skippedLast,
+    roomsFaced: state.roomsFaced,
+    lastPotionValue: state.lastPotionValue || 0,
+    lastResolvedType: state.lastResolvedType || null
+  };
+}
+
+function remainingMonsterScore(deck, unresolved, carry){
+  const rem = carry ? [carry, ...unresolved, ...deck] : [...unresolved, ...deck];
+  return rem.reduce((sum, card)=>sum + (card.t === 'M' ? card.v : 0), 0);
+}
+
+function lossScore(hp, deck, unresolved, carry){
+  return hp - remainingMonsterScore(deck, unresolved, carry);
+}
+
+function doomedPlanScore(hp, carry, unresolved){
+  return hp - remainingMonsterScore([], unresolved, carry);
+}
+
+function shortCard(card){
+  return `${suitGlyph(card.s)}${rankLabel(card.v)}`;
+}
+
+function rankLabel(v){
+  if(v === 11) return 'J';
+  if(v === 12) return 'Q';
+  if(v === 13) return 'K';
+  if(v === 14) return 'A';
+  return String(v);
+}
+
+function weaponLabel(weapon){
+  if(!weapon) return 'none';
+  const cap = weapon.lastKill === null ? '*' : rankLabel(weapon.lastKill);
+  return `${rankLabel(weapon.val)}<=${cap}`;
+}
+
+function renderAsciiCard(card, note=''){
+  const kind = card.t === 'M' ? 'MONSTER' : (card.t === 'W' ? 'WEAPON' : 'POTION');
+  return [
+    '+---------+',
+    `|${centerText(shortCard(card), 9)}|`,
+    `|${centerText(kind, 9)}|`,
+    `|${centerText(note, 9)}|`,
+    '+---------+'
+  ].join('\n');
+}
+
+function suitGlyph(s){
+  if(s === 'C') return '\u2663';
+  if(s === 'S') return '\u2660';
+  if(s === 'D') return '\u2666';
+  if(s === 'H') return '\u2665';
+  return '?';
+}
+
+function centerText(text, width){
+  const s = String(text);
+  const left = Math.max(0, Math.floor((width - s.length) / 2));
+  const right = Math.max(0, width - s.length - left);
+  return `${' '.repeat(left)}${s}${' '.repeat(right)}`;
+}
+
+function renderSingleGame(result){
+  document.getElementById('singleProg').textContent = `Single game: ${result.won ? 'win' : 'loss'} in ${result.roomsFaced} rooms, score ${result.score}.`;
+  document.getElementById('singleSummary').textContent =
+    `RESULT : ${result.won ? 'WIN' : 'LOSS'}\n` +
+    `SCORE  : ${result.score}\n` +
+    `HP     : ${result.state.hp}\n` +
+    `ROOMS  : ${result.roomsFaced}\n` +
+    `WEAPON : ${weaponLabel(result.state.weapon)}\n` +
+    `CARRY  : ${result.carry ? shortCard(result.carry) : 'none'}\n` +
+    `DECK   : ${result.deck.length} cards remain`;
+  document.getElementById('singleLog').textContent = result.log.join('\n');
+  const cardsEl = document.getElementById('singleCards');
+  cardsEl.innerHTML = '';
+  if(result.carry){
+    const div = document.createElement('div');
+    div.className = `df-card ${cardClass(result.carry)}`;
+    div.textContent = renderAsciiCard(result.carry, 'next');
+    cardsEl.appendChild(div);
+  }
+  if(result.state.weapon){
+    const div = document.createElement('div');
+    div.className = 'df-card weapon';
+    div.textContent = renderAsciiCard({t:'W', s:'D', v:result.state.weapon.val}, `<=${result.state.weapon.lastKill === null ? '*' : rankLabel(result.state.weapon.lastKill)}`);
+    cardsEl.appendChild(div);
+  }
+  if(!result.carry && !result.state.weapon){
+    cardsEl.textContent = 'No carry card or equipped weapon.';
+  }
+}
+
+function cardClass(card){
+  return card.t === 'M' ? 'monster' : (card.t === 'W' ? 'weapon' : 'potion');
+}
+
+function runOneGame(){
+  renderSingleGame(playSingleGame(strat));
+}
+
+async function runUntilWin(){
+  const btn = document.getElementById('playUntilWinBtn');
+  btn.disabled = true;
+  document.getElementById('singleProg').textContent = 'Searching for a winning trace...';
+  let attempts = 0;
+  let result = null;
+  const limit = 20000;
+  while(attempts < limit){
+    attempts++;
+    result = playSingleGame(strat);
+    if(result.won) break;
+    if(attempts % 250 === 0){
+      document.getElementById('singleProg').textContent = `Searching for a winning trace... ${attempts} attempts`;
+      await new Promise(r=>setTimeout(r, 0));
+    }
+  }
+  if(result) renderSingleGame(result);
+  if(!result || !result.won){
+    document.getElementById('singleProg').textContent = `No win found in ${limit.toLocaleString()} attempts for "${strat}".`;
+  } else {
+    document.getElementById('singleProg').textContent += ` Found after ${attempts.toLocaleString()} attempts.`;
+  }
+  btn.disabled = false;
+}
+
+async function runSims(){
+  const n = +document.getElementById('simCount').value;
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  document.getElementById('prog').textContent = 'Starting...';
+  await new Promise(r=>setTimeout(r, 20));
+
+  const results = [];
+  const batch = 1000;
+  for(let i = 0; i < n; i += batch){
+    const end = Math.min(i + batch, n);
+    for(let j = i; j < end; j++) results.push(simulate(strat));
+    document.getElementById('prog').textContent = `${Math.round(end / n * 100)}%...`;
+    await new Promise(r=>setTimeout(r, 0));
+  }
+
+  const wins = results.filter(r=>r.won);
+  const losses = results.filter(r=>!r.won);
+  document.getElementById('m-wr').textContent = (wins.length / n * 100).toFixed(1) + '%';
+  document.getElementById('m-ws').textContent = wins.length ? (wins.reduce((s, r)=>s + r.score, 0) / wins.length).toFixed(1) : '-';
+  document.getElementById('m-ls').textContent = losses.length ? (losses.reduce((s, r)=>s + r.score, 0) / losses.length).toFixed(1) : '-';
+  const rms = results.map(r=>r.roomsFaced).sort((a, b)=>a - b);
+  document.getElementById('m-rooms').textContent = rms[0 | n / 2];
+
+  const buckets = [
+    {label:'Won - score 15+', fn:r=>r.won && r.score >= 15, color:'#1D9E75'},
+    {label:'Won - hp 8-14', fn:r=>r.won && r.score >= 8 && r.score < 15, color:'#5DCAA5'},
+    {label:'Won - hp 1-7', fn:r=>r.won && r.score < 8, color:'#9FE1CB'},
+    {label:'Lost - 0 to -30', fn:r=>!r.won && r.score >= -30, color:'#FAC775'},
+    {label:'Lost - 31 to -70', fn:r=>!r.won && r.score >= -70 && r.score < -30, color:'#E24B4A'},
+    {label:'Lost - 71+', fn:r=>!r.won && r.score < -70, color:'#A32D2D'},
+  ];
+
+  const counts = buckets.map(b=>results.filter(b.fn).length);
+  const maxC = Math.max(...counts, 1);
+  const barsEl = document.getElementById('bars');
+  barsEl.innerHTML = '<div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:10px;">Score distribution</div>';
+  buckets.forEach((b, i)=>{
+    const pct = (counts[i] / n * 100).toFixed(1);
+    const w = Math.round(counts[i] / maxC * 100);
+    barsEl.innerHTML += `<div class="bar-row"><span class="bar-label">${b.label}</span><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${b.color}"></div></div><span class="bar-pct">${pct}%</span></div>`;
+  });
+
+  document.getElementById('prog').textContent = `Done - ${n.toLocaleString()} games simulated with "${strat}" strategy.`;
+  btn.disabled = false;
+  btn.textContent = 'Run simulation ->';
+}
+</script>
