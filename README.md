@@ -4,6 +4,8 @@ Play the Dungeon or run the Dungeon.
 
 Scoundrel is a single player rogue-like card game played with a standard deck of playing cards. Fight monsters, equip weapons, drink potions, and try to clear the Dungeon with your 20 health intact.
 
+Play in your browser: https://onecoinoneplay.github.io/scoundrel/
+
 This browser app gives you three ways into the game:
 
 - **Play Dungeon**: play Scoundrel manually, card by card.
