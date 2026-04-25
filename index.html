@@ -33,20 +33,20 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
 .progress{font-size:12px;color:#83806e;margin-top:.5rem;min-height:18px}
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:1rem;background:#111619;border:1px solid #343933;border-radius:4px;padding:10px}
 .control-group{display:flex;align-items:center;gap:8px}
-.control-label,.planner{font-size:12px;color:#9c9a86}
+.control-label,.adventurer{font-size:12px;color:#9c9a86}
 .check-control{display:flex;align-items:center;gap:8px;font-size:12px;color:#9c9a86}
 .check-control input{accent-color:#e6d78f}
-.planner-options{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:8px;flex:1 1 380px}
-.planner-option{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;border:1px solid #343933;background:#121619;border-radius:4px;padding:8px;color:#9c9a86;font-size:11px;line-height:1.35}
-.planner-option input{margin-top:2px;accent-color:#e6d78f}
-.planner-option strong{display:block;color:#f1e8b8;font-size:12px;margin-bottom:2px}
-.planner-option:has(input:checked){border-color:#e6d78f;box-shadow:inset 0 0 0 1px #736b48}
+.adventurer-options{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:8px;flex:1 1 380px}
+.adventurer-option{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;border:1px solid #343933;background:#121619;border-radius:4px;padding:8px;color:#9c9a86;font-size:11px;line-height:1.35}
+.adventurer-option input{margin-top:2px;accent-color:#e6d78f}
+.adventurer-option strong{display:block;color:#f1e8b8;font-size:12px;margin-bottom:2px}
+.adventurer-option:has(input:checked){border-color:#e6d78f;box-shadow:inset 0 0 0 1px #736b48}
 .df-legend{display:flex;flex-wrap:wrap;gap:10px;margin:.85rem 0 .65rem;font-size:11px;color:#83806e}
 .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .legend-red{background:#ff6f61}
 .legend-black{background:#d8d1b0;border:1px solid #9c9a86}
 .legend-gold{background:#e6d78f}
-.df-grid{display:grid;gap:12px;margin-top:.75rem}
+.df-grid{display:grid;gap:12px;margin:.75rem 0 1rem}
 .df-panel{background:#121619;border:1px solid #343933;border-radius:4px;padding:12px}
 .df-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
 .df-panel-title{display:grid;gap:4px}
@@ -88,7 +88,7 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
   .badge{display:inline-block;margin-top:12px}
   .bar-row{display:grid;grid-template-columns:1fr 42px;gap:5px 8px}
   .bar-label{width:auto;text-align:left;grid-column:1 / -1}
-  .planner-options{grid-template-columns:1fr}
+  .adventurer-options{grid-template-columns:1fr}
   .df-panel-head{display:grid}
   .df-panel-action{width:100%}
 }
@@ -102,46 +102,11 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
   <div>
     <div class="eyebrow">Scoundrel</div>
     <h2 class="title">Play the Dungeon or Run the Dungeon</h2>
-    <p class="lede">A single player rogue-like card game. Scoundrel is played with a standard deck of playing cards: fight monsters, equip weapons, drink potions, and try to clear the Dungeon with your 20 health intact. Jump in and Play the Dungeon yourself or run the simulation to explore the odds.</p>
+    <p class="lede">Play a compact dungeon crawl with a trimmed deck of cards. Start a Dungeon, choose how to handle each room, or load generated win and loss traces to study how weapons, potions, monsters, and carried cards shape a run. The simulator estimates the odds once you are ready to compare strategies.</p>
   </div>
   <div class="badge">One Coin One Play</div>
 </section>
 
-<div class="controls">
-  <div class="control-group">
-    <label class="control-label" for="simCount">Planner odds</label>
-    <select id="simCount">
-      <option value="2000">2,000</option>
-      <option value="10000" selected>10,000</option>
-      <option value="50000">50,000</option>
-    </select>
-  </div>
-  <label class="check-control" for="weaponStartOnly">
-    <input id="weaponStartOnly" type="checkbox">
-    Opening room must contain a Weapon
-  </label>
-  <div class="planner-options" aria-label="Planner">
-    <label class="planner-option">
-      <input type="radio" name="planner" value="delver" checked>
-      <span><strong>Scoundrel Delver</strong>Careful play. Avoids risky carried monsters and protects health.</span>
-    </label>
-    <label class="planner-option">
-      <input type="radio" name="planner" value="bolder">
-      <span><strong>Bolder Delver</strong>Braver play. Carries more danger to preserve better rooms and weapons.</span>
-    </label>
-  </div>
-  <button id="runBtn" onclick="runSims()">Estimate odds</button>
-</div>
-
-<div class="metric-grid" id="metrics">
-  <div class="metric"><div class="metric-label">Clear %</div><div class="metric-value" id="m-wr">-</div><div class="metric-sub">planner runs</div></div>
-  <div class="metric"><div class="metric-label">Clear HP</div><div class="metric-value" id="m-ws">-</div><div class="metric-sub">avg on clear</div></div>
-  <div class="metric"><div class="metric-label">Loss score</div><div class="metric-value" id="m-ls">-</div><div class="metric-sub">avg failed run</div></div>
-  <div class="metric"><div class="metric-label">Rooms</div><div class="metric-value" id="m-rooms">-</div><div class="metric-sub">median faced</div></div>
-</div>
-
-<div id="bars"></div>
-<div class="progress" id="prog"></div>
 <div class="df-legend">
   <span><span class="legend-swatch legend-red"></span>red = Weapon/Potion</span>
   <span><span class="legend-swatch legend-black"></span>black = Monster</span>
@@ -162,9 +127,45 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
       </div>
     </div>
     <div id="playControls" class="play-controls"></div>
-    <div id="dungeonLog" class="df-log">No Dungeon loaded.</div>
+    <div id="dungeonLog" class="df-log">Ready.</div>
   </div>
 </div>
+
+<div class="controls">
+  <div class="control-group">
+    <label class="control-label" for="simCount">Adventurer odds</label>
+    <select id="simCount">
+      <option value="2000">2,000</option>
+      <option value="10000" selected>10,000</option>
+      <option value="50000">50,000</option>
+    </select>
+  </div>
+  <label class="check-control" for="weaponStartOnly">
+    <input id="weaponStartOnly" type="checkbox">
+    Opening room must contain a Weapon
+  </label>
+  <div class="adventurer-options" aria-label="Adventurer">
+    <label class="adventurer-option">
+      <input type="radio" name="adventurer" value="delver" checked>
+      <span><strong>Scoundrel Delver</strong>Careful play. Avoids risky carried monsters and protects health.</span>
+    </label>
+    <label class="adventurer-option">
+      <input type="radio" name="adventurer" value="bolder">
+      <span><strong>Bolder Delver</strong>Braver play. Carries more danger to preserve better rooms and weapons.</span>
+    </label>
+  </div>
+  <button id="runBtn" onclick="runSims()">Estimate odds</button>
+</div>
+
+<div class="metric-grid" id="metrics">
+  <div class="metric"><div class="metric-label">Clear %</div><div class="metric-value" id="m-wr">-</div><div class="metric-sub">adventurer runs</div></div>
+  <div class="metric"><div class="metric-label">Clear HP</div><div class="metric-value" id="m-ws">-</div><div class="metric-sub">avg on clear</div></div>
+  <div class="metric"><div class="metric-label">Loss score</div><div class="metric-value" id="m-ls">-</div><div class="metric-sub">avg failed run</div></div>
+  <div class="metric"><div class="metric-label">Rooms</div><div class="metric-value" id="m-rooms">-</div><div class="metric-sub">median faced</div></div>
+</div>
+
+<div id="bars"></div>
+<div class="progress" id="prog"></div>
 
 <details class="rules">
   <summary>Rule</summary>
@@ -183,7 +184,7 @@ body{margin:0;min-height:100vh;background:#080b0c;color:#c6c0a5;padding:24px}
 
 <script>
 // Author: One Coin One Play — https://github.com/OneCoinOnePlay
-const plannerNames = {
+const adventurerNames = {
   delver: 'Scoundrel Delver',
   bolder: 'Bolder Delver'
 };
@@ -208,7 +209,7 @@ function shuffle(a){
 function dungeonOptions(){
   return {
     weaponStartOnly: document.getElementById('weaponStartOnly').checked,
-    strategy: document.querySelector('input[name="planner"]:checked').value
+    strategy: document.querySelector('input[name="adventurer"]:checked').value
   };
 }
 
@@ -731,6 +732,7 @@ let playable = null;
 function startPlayableGame(){
   const options = dungeonOptions();
   playable = createGame(options);
+  playable.pathReview = [];
   drawPlayableRoom();
 }
 
@@ -740,7 +742,24 @@ function drawPlayableRoom(){
     finishPlayableWin();
     return;
   }
+  startPlayableRoomReview();
   renderPlayable();
+}
+
+function startPlayableRoomReview(){
+  const state = cloneState(playable);
+  const room = playable.room.slice();
+  const plan = evaluateRoomPlan(room, state, playable.isFinalRoom);
+  playable.currentReview = {
+    room,
+    state,
+    isFinalRoom: playable.isFinalRoom,
+    canAvoid: canAvoidRoom(playable),
+    plan,
+    avoided: false,
+    steps: [],
+    carryCard: null
+  };
 }
 
 function renderPlayable(){
@@ -784,11 +803,16 @@ function renderPlayable(){
 
 function avoidPlayableRoom(){
   if(!playable || !avoidRoom(playable)) return;
+  if(playable.currentReview){
+    playable.currentReview.avoided = true;
+    finishPlayableRoomReview();
+  }
   drawPlayableRoom();
 }
 
 function resolvePlayableCard(index, action){
   if(!playable || !resolveGameCard(playable, index, action)) return;
+  recordPlayableStep();
 
   if(playable.hp <= 0){
     finishPlayableLoss();
@@ -800,34 +824,106 @@ function resolvePlayableCard(index, action){
   }
   if(shouldCarryAndDraw(playable)){
     carryLastCard(playable);
+    recordPlayableCarry();
+    finishPlayableRoomReview();
     drawPlayableRoom();
     return;
   }
   renderPlayable();
 }
 
+function recordPlayableStep(){
+  if(!playable.currentReview || !playable.log.length) return;
+  playable.currentReview.steps.push(normalizeStep(playable.log[playable.log.length - 1]));
+}
+
+function recordPlayableCarry(){
+  if(!playable.currentReview || !playable.carry) return;
+  playable.currentReview.carryCard = cloneCard(playable.carry);
+}
+
+function finishPlayableRoomReview(){
+  if(!playable.currentReview) return;
+  playable.pathReview.push(playable.currentReview);
+  playable.currentReview = null;
+}
+
 function finishPlayableLoss(){
+  finishPlayableRoomReview();
   if(playable.room.length) playable.log.push(`  - unresolved ${playable.room.map(shortCard).join(' ')}`);
   playable.log.push(`  - final state: hp ${playable.hp}, weapon ${weaponStackLabel(playable.weapon)}`);
   const score = lossScore(playable.hp, playable.deck, playable.room, playable.carry);
-  playable.log.push(`END: Dungeon lost, score ${score}`);
-  document.getElementById('dungeonProg').textContent = `You: lost · ${playable.roomsFaced} rooms · score ${score}`;
+  const pathLabel = evaluatePlayablePath(playable.pathReview);
+  const styleText = pathLabel ? ` · Adventurer style: ${pathLabel}` : '';
+  const statusStyleText = pathLabel ? ` · ${pathLabel}` : '';
+  playable.log.push(`END: Dungeon lost, score ${score}${styleText}`);
+  document.getElementById('dungeonProg').textContent = `You: lost · ${playable.roomsFaced} rooms · score ${score}${statusStyleText}`;
   document.getElementById('dungeonLog').innerHTML = renderDungeonLog(playable.log);
   document.getElementById('playControls').innerHTML = '';
 }
 
 function finishPlayableWin(){
+  finishPlayableRoomReview();
   const score = playableScore(playable);
+  const pathLabel = evaluatePlayablePath(playable.pathReview);
   playable.log.push(`  - final state: hp ${playable.hp}, weapon ${weaponStackLabel(playable.weapon)}`);
-  playable.log.push(`END: Dungeon cleared, score ${score}`);
-  document.getElementById('dungeonProg').textContent = `You: cleared · ${playable.roomsFaced} rooms · score ${score}`;
+  const styleText = pathLabel ? ` · Adventurer style: ${pathLabel}` : '';
+  const statusStyleText = pathLabel ? ` · ${pathLabel}` : '';
+  playable.log.push(`END: Dungeon cleared, score ${score}${styleText}`);
+  document.getElementById('dungeonProg').textContent = `You: cleared · ${playable.roomsFaced} rooms · score ${score}${statusStyleText}`;
   document.getElementById('dungeonLog').innerHTML = renderDungeonLog(playable.log);
   document.getElementById('playControls').innerHTML = '';
 }
 
+function evaluatePlayablePath(reviews){
+  const scores = {
+    delver: scorePlayablePath(reviews, 'delver'),
+    bolder: scorePlayablePath(reviews, 'bolder')
+  };
+  if(scores.delver === scores.bolder) return '';
+  return adventurerNames[scores.delver > scores.bolder ? 'delver' : 'bolder'];
+}
+
+function scorePlayablePath(reviews, strategy){
+  return reviews.reduce((score, review)=>{
+    const plan = review.plan;
+    const adventurerAvoids = review.canAvoid && shouldSkipRoom(review.room, cloneState(review.state), strategy, plan);
+    if(review.avoided) return score + (adventurerAvoids ? 8 : -8);
+    if(adventurerAvoids) score -= 8;
+    if(!review.isFinalRoom && cardsEqual(review.carryCard, plan.carryCard)) score += 4;
+    const plannedSteps = (plan.outcome.steps || []).map(normalizeStep);
+    score += sequenceMatchScore(review.steps, plannedSteps);
+    return score;
+  }, 0);
+}
+
+function sequenceMatchScore(actualSteps, plannedSteps){
+  let score = 0;
+  const plannedSet = new Set(plannedSteps);
+  const n = Math.max(actualSteps.length, plannedSteps.length);
+  for(let i = 0; i < n; i++){
+    if(actualSteps[i] && actualSteps[i] === plannedSteps[i]) score += 2;
+    else if(actualSteps[i] && plannedSet.has(actualSteps[i])) score += 1;
+    else score -= 1;
+  }
+  return score;
+}
+
+function normalizeStep(line){
+  return String(line).replace(/^\s*-\s*/, '').replace(/\s+\[discarded\]$/, '').replace(/\s+\[discarded second potion\]$/, '');
+}
+
+function cloneCard(card){
+  return card ? {t:card.t, v:card.v, s:card.s} : null;
+}
+
+function cardsEqual(a, b){
+  return !!a && !!b && a.t === b.t && a.v === b.v && a.s === b.s;
+}
+
 function runOneGame(){
   const options = dungeonOptions();
-  renderRun(playSingleGame(options.strategy, options), 'dungeonLog', 'dungeonProg', plannerNames[options.strategy]);
+  renderRun(playSingleGame(options.strategy, options), 'dungeonLog', 'dungeonProg', adventurerNames[options.strategy]);
 }
 
 async function runUntilWin(){
@@ -867,7 +963,7 @@ async function runUntilResult({buttonId, targetWon, searchingText, notFoundText,
       await new Promise(r=>setTimeout(r, 0));
     }
   }
-  if(result) renderRun(result, 'dungeonLog', 'dungeonProg', `${plannerNames[options.strategy]} ${labelSuffix}`);
+  if(result) renderRun(result, 'dungeonLog', 'dungeonProg', `${adventurerNames[options.strategy]} ${labelSuffix}`);
   if(!result || result.won !== targetWon){
     document.getElementById('dungeonProg').textContent = `${notFoundText} in ${limit.toLocaleString()} attempts.`;
   } else {
@@ -882,7 +978,7 @@ async function runSims(){
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
   btn.textContent = 'Estimating...';
-  document.getElementById('prog').textContent = 'Estimating planner odds...';
+  document.getElementById('prog').textContent = 'Estimating adventurer odds...';
   await new Promise(r=>setTimeout(r, 20));
 
   const results = [];
@@ -890,7 +986,7 @@ async function runSims(){
   for(let i = 0; i < n; i += batch){
     const end = Math.min(i + batch, n);
     for(let j = i; j < end; j++) results.push(simulate(options.strategy, options));
-    document.getElementById('prog').textContent = `${end.toLocaleString()} / ${n.toLocaleString()} planner runs`;
+    document.getElementById('prog').textContent = `${end.toLocaleString()} / ${n.toLocaleString()} adventurer runs`;
     await new Promise(r=>setTimeout(r, 0));
   }
 
@@ -914,7 +1010,7 @@ async function runSims(){
   const counts = buckets.map(b=>results.filter(b.fn).length);
   const maxC = Math.max(...counts, 1);
   const barsEl = document.getElementById('bars');
-  barsEl.innerHTML = '<div class="section-title">Planner score distribution</div>';
+  barsEl.innerHTML = '<div class="section-title">Adventurer score distribution</div>';
   buckets.forEach((b, i)=>{
     const pct = (counts[i] / n * 100).toFixed(1);
     const w = Math.round(counts[i] / maxC * 100);
@@ -923,7 +1019,7 @@ async function runSims(){
 
   const skipped = results.reduce((sum, r)=>sum + (r.skippedDungeons || 0), 0);
   const rejectedText = options.weaponStartOnly ? ` · rejected ${skipped.toLocaleString()} openings` : '';
-  document.getElementById('prog').textContent = `estimated ${n.toLocaleString()} planner runs${rejectedText}`;
+  document.getElementById('prog').textContent = `estimated ${n.toLocaleString()} adventurer runs${rejectedText}`;
   btn.disabled = false;
   btn.textContent = 'Estimate odds';
 }

@@ -7,14 +7,14 @@ Scoundrel is a single player rogue-like card game played with a standard deck of
 This browser app gives you three ways into the game:
 
 - **Play Dungeon**: play Scoundrel manually, card by card.
-- **Run Lost Trace / Run Cleared Trace**: generate example Dungeon runs to inspect how a planner falls or clears.
-- **Estimate odds**: run planner simulations and compare clear rate, average clear health, loss score, and rooms faced.
+- **Run Lost Trace / Run Cleared Trace**: generate example Dungeon runs to inspect how an adventurer falls or clears.
+- **Estimate odds**: run adventurer simulations and compare clear rate, average clear health, loss score, and rooms faced.
 
 Open `index.html` in a browser, or publish this folder with GitHub Pages.
 
-## Planners
+## Adventurers
 
-The planners are not hidden-deck solvers. They use visible game state only: the current room, health, weapon stack, potion rule, and carry-card risk.
+The adventurers are not hidden-deck solvers. They use visible game state only: the current room, health, weapon stack, potion rule, and carry-card risk.
 
 ### Scoundrel Delver
 
@@ -24,11 +24,11 @@ Careful play. Avoids risky carried monsters and protects health.
 
 Braver play. Carries more danger to preserve better rooms and weapons.
 
-## Planner Results
+## Adventurer Results
 
-Estimated over 10,000 planner runs.
+Estimated over 10,000 adventurer runs.
 
-| Planner | Setup | Clear % | Clear HP | Loss score | Rooms |
+| Adventurer | Setup | Clear % | Clear HP | Loss score | Rooms |
 | --- | --- | ---: | ---: | ---: | ---: |
 | Scoundrel Delver | Standard opening | 5.2% | 6.1 | -56.5 | 17 |
 | Scoundrel Delver | Opening room must contain a Weapon | 6.5% | 6.4 | -52.1 | 17 |
